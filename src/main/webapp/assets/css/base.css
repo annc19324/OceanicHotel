@@ -1,0 +1,37 @@
+/* Style chung cho toàn bộ trang */
+body {
+    background-image: var(--background-image);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: var(--background-color); /* Màu dự phòng nếu hình không tải được */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    position: relative;
+    transition: background-color 0.5s ease; /* Hiệu ứng chuyển đổi mượt mà */
+}
+
+/* Tiêu đề */
+h2 {
+    color: var(--title-color);
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* Link */
+a {
+    color: var(--link-color);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: var(--button-hover-bg);
+    text-decoration: underline;
+}
