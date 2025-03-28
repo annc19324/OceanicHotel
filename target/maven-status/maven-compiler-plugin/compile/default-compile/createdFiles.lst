@@ -10,6 +10,7 @@ com\mycompany\oceanichotel\controllers\user\LogoutController.class
 com\mycompany\oceanichotel\controllers\user\UserDashboardController.class
 com\mycompany\oceanichotel\services\admin\AdminUserService.class
 com\mycompany\oceanichotel\controllers\user\ErrorHandlerServlet.class
+com\mycompany\oceanichotel\models\LoginHistory.class
 com\mycompany\oceanichotel\JakartaRestConfiguration.class
 com\mycompany\oceanichotel\models\User.class
 com\mycompany\oceanichotel\resources\JakartaEE10Resource.class

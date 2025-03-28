@@ -1,28 +1,17 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const contextPath = window.contextPath || '';
-    const theme = document.body.getAttribute('data-theme') || 'light';
-    if (theme === 'dark') {
-        document.body.classList.add('dark-mode');
-    }
-
+document.addEventListener('DOMContentLoaded', () => {
     const themeSelect = document.getElementById('themeSelect');
     if (themeSelect) {
-        themeSelect.addEventListener('change', function () {
-            const selectedTheme = this.value;
-            document.body.classList.toggle('dark-mode', selectedTheme === 'dark');
+        themeSelect.addEventListener('change', (e) => {
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = contextPath + '/settings';
-            form.style.display = 'none';
-            const themeInput = document.createElement('input');
-            themeInput.type = 'hidden';
-            themeInput.name = 'theme';
-            themeInput.value = selectedTheme;
-            form.appendChild(themeInput);
+            form.action = window.contextPath + '/settings';
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'theme';
+            input.value = e.target.value;
+            form.appendChild(input);
             document.body.appendChild(form);
             form.submit();
         });
-    } else {
-        console.error('themeSelect element not found');
     }
 });

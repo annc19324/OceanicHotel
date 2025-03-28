@@ -1,23 +1,17 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const contextPath = window.contextPath || '';
-
+document.addEventListener('DOMContentLoaded', () => {
     const languageSelect = document.getElementById('languageSelect');
     if (languageSelect) {
-        languageSelect.addEventListener('change', function () {
-            const selectedLanguage = this.value;
+        languageSelect.addEventListener('change', (e) => {
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = contextPath + '/settings';
-            form.style.display = 'none';
-            const languageInput = document.createElement('input');
-            languageInput.type = 'hidden';
-            languageInput.name = 'language';
-            languageInput.value = selectedLanguage;
-            form.appendChild(languageInput);
+            form.action = window.contextPath + '/settings';
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'language';
+            input.value = e.target.value;
+            form.appendChild(input);
             document.body.appendChild(form);
             form.submit();
         });
-    } else {
-        console.error('languageSelect element not found');
     }
 });

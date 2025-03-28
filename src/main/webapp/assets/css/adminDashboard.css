@@ -1,0 +1,39 @@
+/*.admin-nav ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    gap: 20px;
+}
+
+.admin-nav a {
+    text-decoration: none;
+    color: #000;
+    height: 70%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dark-mode .admin-nav a {
+    color: #fff;
+}
+
+.content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.content th, .content td {
+    padding: 10px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+.dark-mode .content th, .dark-mode .content td {
+    border-color: #555;
+}
+
+.dashboard{
+    max-width: 800px;
+}*/

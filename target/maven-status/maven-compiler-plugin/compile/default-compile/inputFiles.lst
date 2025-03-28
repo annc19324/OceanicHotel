@@ -3,6 +3,7 @@ D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\controllers\user\S
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\services\admin\AdminUserService.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\controllers\admin\AdminDashboardController.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\filters\AccessFilter.java
+D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\models\LoginHistory.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\controllers\user\UserDashboardController.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\services\user\UserService.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\resources\JakartaEE10Resource.java
