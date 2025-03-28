@@ -1,0 +1,165 @@
+package com.mycompany.oceanichotel.controllers.admin;
+
+import com.mycompany.oceanichotel.models.Room;
+import com.mycompany.oceanichotel.services.admin.AdminRoomService;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
+@WebServlet("/admin/rooms/*")
+public class AdminRoomController extends HttpServlet {
+
+    private AdminRoomService roomService;
+    private static final Logger LOGGER = Logger.getLogger(AdminRoomController.class.getName());
+
+    @Override
+    public void init() throws ServletException {
+        roomService = new AdminRoomService();
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String pathInfo = request.getPathInfo();
+        try {
+            if (pathInfo == null || pathInfo.equals("/")) {
+                int page = request.getParameter("page") != null ? Integer.parseInt(request.getParameter("page")) : 1;
+                String search = request.getParameter("search");
+                String status = request.getParameter("status");
+                String roomType = request.getParameter("roomType");
+
+                List<Room> rooms = roomService.getRooms(page, search, status, roomType);
+                int totalRooms = roomService.getTotalRooms(search, status, roomType);
+                int totalPages = (int) Math.ceil((double) totalRooms / 10);
+
+                request.setAttribute("rooms", rooms);
+                request.setAttribute("currentPage", page);
+                request.setAttribute("totalPages", totalPages);
+                request.getRequestDispatcher("/WEB-INF/views/admin/rooms.jsp").forward(request, response);
+            } else if (pathInfo.equals("/add")) {
+                request.getRequestDispatcher("/WEB-INF/views/admin/add_room.jsp").forward(request, response);
+            } else if (pathInfo.equals("/edit")) {
+                int roomId = Integer.parseInt(request.getParameter("roomId"));
+                Room room = roomService.getRoomById(roomId);
+                if (room != null) {
+                    request.setAttribute("room", room);
+                    request.getRequestDispatcher("/WEB-INF/views/admin/edit_room.jsp").forward(request, response);
+                } else {
+                    request.setAttribute("error", "Room not found.");
+                    request.getRequestDispatcher("/WEB-INF/views/admin/rooms.jsp").forward(request, response);
+                }
+            } else if (pathInfo.equals("/edit-history")) {
+                int roomId = Integer.parseInt(request.getParameter("roomId"));
+                request.setAttribute("error", "Edit history not implemented yet.");
+                request.getRequestDispatcher("/WEB-INF/views/admin/rooms.jsp").forward(request, response);
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Database error in doGet", e);
+            throw new ServletException("Database error", e);
+        } catch (NumberFormatException e) {
+            LOGGER.log(Level.WARNING, "Invalid roomId in doGet: " + request.getParameter("roomId"), e);
+            request.setAttribute("error", "Invalid room ID.");
+            request.getRequestDispatcher("/WEB-INF/views/admin/rooms.jsp").forward(request, response);
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String pathInfo = request.getPathInfo();
+        try {
+            if (pathInfo.equals("/add")) {
+                String roomNumber = request.getParameter("roomNumber");
+                String roomType = request.getParameter("roomType");
+                double pricePerNight = Double.parseDouble(request.getParameter("pricePerNight"));
+                boolean isAvailable = "true".equals(request.getParameter("isAvailable"));
+                String description = request.getParameter("description");
+
+                // Kiểm tra trùng lặp
+                if (roomService.isRoomNumberExists(roomNumber)) {
+                    request.setAttribute("error", "Room number '" + roomNumber + "' already exists.");
+                    request.getRequestDispatcher("/WEB-INF/views/admin/add_room.jsp").forward(request, response);
+                    return;
+                }
+
+                Room room = new Room();
+                room.setRoomNumber(roomNumber);
+                room.setRoomType(roomType);
+                room.setPricePerNight(pricePerNight);
+                room.setAvailable(isAvailable);
+                room.setDescription(description);
+                roomService.addRoom(room);
+                response.sendRedirect(request.getContextPath() + "/admin/rooms?message=add_success");
+            } else if (pathInfo.equals("/update")) {
+                int roomId = Integer.parseInt(request.getParameter("roomId"));
+                String roomNumber = request.getParameter("roomNumber");
+                String roomType = request.getParameter("roomType");
+                double pricePerNight = Double.parseDouble(request.getParameter("pricePerNight"));
+                boolean isAvailable = "true".equals(request.getParameter("isAvailable"));
+                String description = request.getParameter("description");
+
+                Room existingRoom = roomService.getRoomById(roomId);
+                if (existingRoom == null) {
+                    request.setAttribute("error", "Room not found.");
+                    request.getRequestDispatcher("/WEB-INF/views/admin/edit_room.jsp").forward(request, response);
+                    return;
+                }
+
+                // Kiểm tra trùng lặp (bỏ qua chính room hiện tại)
+                if (!roomNumber.equals(existingRoom.getRoomNumber()) && roomService.isRoomNumberExists(roomNumber)) {
+                    request.setAttribute("error", "Room number '" + roomNumber + "' already exists.");
+                    request.setAttribute("room", existingRoom);
+                    request.getRequestDispatcher("/WEB-INF/views/admin/edit_room.jsp").forward(request, response);
+                    return;
+                }
+
+                Room room = new Room();
+                room.setRoomId(roomId);
+                room.setRoomNumber(roomNumber);
+                room.setRoomType(roomType);
+                room.setPricePerNight(pricePerNight);
+                room.setAvailable(isAvailable);
+                room.setDescription(description);
+                roomService.updateRoom(room);
+                response.sendRedirect(request.getContextPath() + "/admin/rooms?message=update_success");
+            } else if (pathInfo.equals("/delete")) {
+                int roomId = Integer.parseInt(request.getParameter("roomId"));
+                Room room = roomService.getRoomById(roomId);
+                if (room == null) {
+                    request.setAttribute("error", "Room not found.");
+                    request.getRequestDispatcher("/WEB-INF/views/admin/rooms.jsp").forward(request, response);
+                    return;
+                }
+                roomService.deleteRoom(roomId);
+                response.sendRedirect(request.getContextPath() + "/admin/rooms?message=delete_success");
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Database error in doPost", e);
+            request.setAttribute("error", "Database error occurred. Please try again.");
+            if (pathInfo.equals("/add")) {
+                request.getRequestDispatcher("/WEB-INF/views/admin/add_room.jsp").forward(request, response);
+            } else if (pathInfo.equals("/update")) {
+                request.getRequestDispatcher("/WEB-INF/views/admin/edit_room.jsp").forward(request, response);
+            } else {
+                request.getRequestDispatcher("/WEB-INF/views/admin/rooms.jsp").forward(request, response);
+            }
+        } catch (NumberFormatException e) {
+            LOGGER.log(Level.WARNING, "Invalid roomId or price in doPost: " + request.getParameter("roomId"), e);
+            request.setAttribute("error", "Invalid input (room ID or price).");
+            if (pathInfo.equals("/add")) {
+                request.getRequestDispatcher("/WEB-INF/views/admin/add_room.jsp").forward(request, response);
+            } else if (pathInfo.equals("/update")) {
+                request.getRequestDispatcher("/WEB-INF/views/admin/edit_room.jsp").forward(request, response);
+            } else {
+                request.getRequestDispatcher("/WEB-INF/views/admin/rooms.jsp").forward(request, response);
+            }
+        }
+    }
+}

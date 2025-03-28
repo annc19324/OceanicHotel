@@ -1,6 +1,5 @@
 package com.mycompany.oceanichotel.controllers.admin;
 
-import com.mycompany.oceanichotel.models.LoginHistory;
 import com.mycompany.oceanichotel.models.User;
 import com.mycompany.oceanichotel.services.admin.AdminUserService;
 import jakarta.servlet.ServletException;
@@ -53,11 +52,6 @@ public class AdminUserController extends HttpServlet {
                 } else {
                     response.sendRedirect(request.getContextPath() + "/admin/users?error=user_not_found");
                 }
-            } else if (pathInfo.equals("/login-history")) {
-                int userId = Integer.parseInt(request.getParameter("userId"));
-                List<LoginHistory> loginHistory = userService.getLoginHistory(userId);
-                request.setAttribute("loginHistory", loginHistory);
-                request.getRequestDispatcher("/WEB-INF/views/admin/login_history.jsp").forward(request, response);
             }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Database error in doGet", e);
@@ -72,39 +66,58 @@ public class AdminUserController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String pathInfo = request.getPathInfo();
+        String language = (String) request.getSession().getAttribute("language");
+        if (language == null) {
+            language = "en";
+            request.getSession().setAttribute("language", language);
+        }
         try {
             if (pathInfo.equals("/add")) {
                 User user = new User();
                 user.setUsername(request.getParameter("username"));
-                user.setPassword(request.getParameter("password"));
                 user.setEmail(request.getParameter("email"));
+                user.setPassword(request.getParameter("password")); // Nên mã hóa mật khẩu trong thực tế
                 user.setRole(request.getParameter("role"));
-                user.setActive("true".equals(request.getParameter("isActive")));
-                userService.addUser(user);
-                response.sendRedirect(request.getContextPath() + "/admin/users");
+                try {
+                    userService.addUser(user);
+                    response.sendRedirect(request.getContextPath() + "/admin/users?message=add_success");
+                } catch (SQLException e) {
+                    if (e.getMessage().contains("Username already exists")) {
+                        request.setAttribute("error", language.equals("vi") ? "Tên người dùng đã tồn tại!" : "Username already exists!");
+                    } else if (e.getMessage().contains("Email already exists")) {
+                        request.setAttribute("error", language.equals("vi") ? "Email đã tồn tại!" : "Email already exists!");
+                    } else {
+                        throw e;
+                    }
+                    request.getRequestDispatcher("/WEB-INF/views/admin/add_user.jsp").forward(request, response);
+                }
             } else if (pathInfo.equals("/update")) {
                 int userId = Integer.parseInt(request.getParameter("userId"));
                 User user = new User();
                 user.setUserId(userId);
                 user.setUsername(request.getParameter("username"));
                 user.setEmail(request.getParameter("email"));
+                String password = request.getParameter("password");
+                if (password != null && !password.isEmpty()) {
+                    user.setPassword(password); // Nên mã hóa mật khẩu trong thực tế
+                }
                 user.setRole(request.getParameter("role"));
-                user.setActive("true".equals(request.getParameter("isActive")));
-                userService.updateUser(user);
-                response.sendRedirect(request.getContextPath() + "/admin/users?message=update_success");
+                try {
+                    userService.updateUser(user);
+                    response.sendRedirect(request.getContextPath() + "/admin/users?message=update_success");
+                } catch (SQLException e) {
+                    if (e.getMessage().contains("Username already exists")) {
+                        request.setAttribute("error", language.equals("vi") ? "Tên người dùng đã tồn tại!" : "Username already exists!");
+                    } else if (e.getMessage().contains("Email already exists")) {
+                        request.setAttribute("error", language.equals("vi") ? "Email đã tồn tại!" : "Email already exists!");
+                    } else {
+                        throw e;
+                    }
+                    request.setAttribute("user", user);
+                    request.getRequestDispatcher("/WEB-INF/views/admin/edit_user.jsp").forward(request, response);
+                }
             } else if (pathInfo.equals("/delete")) {
-                String userIdStr = request.getParameter("userId");
-                if (userIdStr == null || userIdStr.trim().isEmpty() || userIdStr.equals("undefined")) {
-                    LOGGER.log(Level.WARNING, "Invalid userId in delete: " + userIdStr);
-                    response.sendRedirect(request.getContextPath() + "/admin/users?error=invalid_user_id");
-                    return;
-                }
-                int userId = Integer.parseInt(userIdStr);
-                if (userId <= 0) {
-                    LOGGER.log(Level.WARNING, "Negative or zero userId in delete: " + userId);
-                    response.sendRedirect(request.getContextPath() + "/admin/users?error=invalid_user_id");
-                    return;
-                }
+                int userId = Integer.parseInt(request.getParameter("userId"));
                 userService.deleteUser(userId);
                 response.sendRedirect(request.getContextPath() + "/admin/users?message=delete_success");
             }
@@ -112,8 +125,8 @@ public class AdminUserController extends HttpServlet {
             LOGGER.log(Level.SEVERE, "Database error in doPost", e);
             throw new ServletException("Database error", e);
         } catch (NumberFormatException e) {
-            LOGGER.log(Level.WARNING, "NumberFormatException in doPost with userId: " + request.getParameter("userId"), e);
-            response.sendRedirect(request.getContextPath() + "/admin/users?error=invalid_user_id");
+            LOGGER.log(Level.WARNING, "Invalid userId in doPost: " + request.getParameter("userId"), e);
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=invalid_input");
         }
     }
 }

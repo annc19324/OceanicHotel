@@ -1,0 +1,17 @@
+/*Style cho container chính (admin-container, main-content, header).*/
+.admin-container {
+    display: flex;
+    min-height: 95vh;
+    width: 96.5vw;
+    opacity: 0.95;
+}
+
+.main-content {
+    flex: 1;
+    padding: 20px;
+    background-color: var(--background-color);
+}
+
+header {
+    margin-bottom: 30px;
+}

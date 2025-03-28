@@ -1,0 +1,31 @@
+/*CSS toàn cục (màu sắc, hình nền, v.v.) cho cả chế độ sáng và tối.*/
+
+:root {
+    /* Chế độ sáng (mặc định) */
+    --background-color: #f0f4f8;
+    --container-bg: rgba(255, 255, 255, 0.65);
+    --text-color: #34495e;
+    --title-color: #2c3e50;
+    --border-color: #dcdcdc;
+    --button-bg: #3498db;
+    --button-hover-bg: #2980b9;
+    --link-color: #3498db;
+    --error-color: #e74c3c;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --background-image: url('../images/Home-BG.png');
+}
+
+body.dark-mode {
+    /* Chế độ tối */
+    --background-color: #1a1a1a;
+    --container-bg: rgba(80, 80, 80, 0.8);
+    --text-color: #f0f0f0;
+    --title-color: #ffffff;
+    --border-color: #666666;
+    --button-bg: #1e90ff;
+    --button-hover-bg: #1c86ee;
+    --link-color: #1e90ff;
+    --error-color: #ff5555;
+    --shadow-color: rgba(255, 255, 255, 0.2);
+    --background-image: url('../images/darkbackground.png');
+}

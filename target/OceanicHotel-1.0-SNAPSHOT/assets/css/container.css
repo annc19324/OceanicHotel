@@ -1,78 +1,17 @@
-/* Container chính */
-.container {
-    background-color: var(--container-bg);
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px var(--shadow-color);
-    max-width: 400px;
-    width: 100%;
-    text-align: center;
-    backdrop-filter: blur(3px); /* Giảm độ mờ */
-    border: 1px solid var(--border-color); /* Thêm viền nhẹ */
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.container:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 15px var(--shadow-color);
-}
-
-/* Form và các input */
-form {
+/* Container styles */
+.admin-container {
     display: flex;
-    flex-direction: column;
-    gap: 15px;
+    min-height: 95vh;
+    width: 96.5vw;
+    opacity: 0.95;
 }
 
-label {
-    font-size: 14px;
-    color: var(--text-color);
-    text-align: left;
-    font-weight: 500;
+.main-content {
+    flex: 1;
+    padding: 20px;
+    background-color: var(--background-color);
 }
 
-input[type="text"],
-input[type="email"],
-input[type="password"] {
-    padding: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    font-size: 14px;
-    width: 100%;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    background-color: var(--container-bg);
-    color: var(--text-color);
-}
-
-input[type="text"]:focus,
-input[type="email"]:focus,
-input[type="password"]:focus {
-    border-color: var(--button-bg);
-    box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
-    outline: none;
-}
-
-/* Button */
-button {
-    background-color: var(--button-bg);
-    color: #ffffff;
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-button:hover {
-    background-color: var(--button-hover-bg);
-    transform: scale(1.02);
-}
-
-/* Thông báo lỗi */
-p[style*="color: red"] {
-    color: var(--error-color) !important;
-    font-size: 14px;
-    margin-top: 10px;
-    font-style: italic;
+header {
+    margin-bottom: 30px;
 }

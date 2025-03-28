@@ -1,10 +1,4 @@
-.admin-container {
-    display: flex;
-    min-height: 90vh;
-    width: 100vw;
-    opacity: 0.95;
-}
-
+/* Sidebar styles */
 .sidebar {
     width: 250px;
     background-color: #2c3e50;
@@ -43,14 +37,4 @@
 .sidebar ul li a:hover,
 .sidebar ul li.active a {
     background-color: #3498db;
-}
-
-.main-content {
-    flex: 1;
-    padding: 20px;
-    background-color: var(--background-color);
-}
-
-header {
-    margin-bottom: 30px;
 }

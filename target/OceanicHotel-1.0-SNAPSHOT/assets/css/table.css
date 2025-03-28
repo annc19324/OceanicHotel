@@ -1,3 +1,4 @@
+/* Table styles */
 .table-header {
     display: flex;
     justify-content: space-between;
@@ -5,27 +6,12 @@
     margin-bottom: 20px;
 }
 
-.filter-btn {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 8px 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background-color: #1B7FE2;
-    cursor: pointer;
-}
-
-.filter-btn i {
-    font-size: 14px;
-}
-
 .search input {
     padding: 8px 15px;
     border: 1px solid #ddd;
     border-radius: 5px;
     font-size: 14px;
-    width: 800px;
+    width: 200px;
 }
 
 .data-table {
@@ -57,32 +43,16 @@
     border-radius: 5px;
     font-size: 12px;
     font-weight: 500;
-    display: flex;
-    justify-content: start;
 }
 
 .status.clean {
-/*    background-color: #2ecc71;*/
+    background-color: #2ecc71;
     color: #fff;
 }
 
 .status.dirty {
-    /*background-color: #e74c3c;*/
+    background-color: #e74c3c;
     color: #fff;
-}
-
-.dark-mode .data-table {
-    background-color: #444;
-}
-
-.dark-mode .data-table th {
-    background-color: #555;
-    color: #fff;
-}
-
-.dark-mode .data-table td {
-    color: #ddd;
-    border-bottom: 1px solid #666;
 }
 
 .pagination {
@@ -112,26 +82,10 @@
     border-color: #3498db;
 }
 
-.dark-mode .page-btn {
-    background-color: #555;
-    border-color: #666;
-    color: #fff;
-}
-
-.dark-mode .page-btn:hover {
-    background-color: #666;
-}
-
-.dark-mode .page-btn.active {
-    background-color: #1e90ff;
-    border-color: #1e90ff;
-}
-
 .dropdown {
     position: relative;
     display: inline-block;
 }
-
 .dropdown-btn {
     background: none;
     border: none;
@@ -140,7 +94,6 @@
     padding: 0 10px;
     color: var(--text-color);
 }
-
 .dropdown-content {
     display: none;
     position: absolute;
@@ -152,43 +105,23 @@
     border-radius: 5px;
     border: 1px solid var(--border-color);
 }
-
-.dropdown-content a,
-.dropdown-content .delete-link {
+.dropdown-content a {
     color: var(--text-color);
     padding: 8px 16px;
     text-decoration: none;
     display: block;
     border-bottom: 1px solid var(--border-color);
 }
-
-.dropdown-content .delete-link {
-    background: none;
-    border: none;
-    width: 100%;
-    text-align: left;
-    cursor: pointer;
-}
-
-.dropdown-content a:last-child,
-.dropdown-content .delete-link:last-child {
+.dropdown-content a:last-child {
     border-bottom: none;
 }
-
-.dropdown-content a:hover,
-.dropdown-content .delete-link:hover {
+.dropdown-content a:hover {
     background-color: var(--button-hover-bg);
     color: #fff;
 }
-
-.dropdown:hover .dropdown-content {
-    display: block;
-}
-
 .dark-mode .dropdown-btn {
     color: #fff;
 }
-
 .dark-mode .dropdown-content {
     background-color: #555;
 }

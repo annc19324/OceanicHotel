@@ -3,36 +3,22 @@
 // Đóng modal
 export function closeModal(modalId) {
     const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.remove('active');
-        setTimeout(() => modal.style.display = 'none', 300); // Chờ animation hoàn tất
-    } else {
-        console.error(`Modal with ID ${modalId} not found`);
-    }
+    modal.classList.remove('active');
+    setTimeout(() => modal.style.display = 'none', 300); // Chờ animation hoàn tất
 }
 
 // Hiển thị modal với hiệu ứng
 export function showModal(modalId) {
     const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'flex';
-        setTimeout(() => modal.classList.add('active'), 10); // Thêm class sau khi display để chạy animation
-    } else {
-        console.error(`Modal with ID ${modalId} not found`);
-    }
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('active'), 10); // Thêm class sau khi display để chạy animation
 }
 
 // Hiển thị modal xác nhận
-export function showConfirmModal(action, userId, contextPath = window.contextPath, language = window.language) {
-    console.log('showConfirmModal called with:', { action, userId, contextPath, language });
+export function showConfirmModal(action, userId, contextPath, language) {
     const modal = document.getElementById('confirmModal');
     const message = document.getElementById('confirmMessage');
     const yesBtn = document.getElementById('confirmYes');
-
-    if (!modal || !message || !yesBtn) {
-        console.error('Modal elements not found');
-        return;
-    }
 
     if (action === 'delete') {
         message.textContent = language === 'vi' ? 'Bạn có chắc chắn muốn xóa người dùng này không?' : 'Are you sure you want to delete this user?';

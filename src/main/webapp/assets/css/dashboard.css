@@ -1,60 +1,6 @@
-.admin-container {
-    display: flex;
-    min-height: 90vh;
-    width: 100vw;
-    opacity: 0.95;
-}
+/* dashboard.css - Style cho trang dashboard */
 
-.sidebar {
-    width: 250px;
-    background-color: #2c3e50;
-    color: #fff;
-    padding: 20px;
-}
-
-.sidebar-header {
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-.sidebar-header h3 {
-    color: #fff;
-    font-size: 24px;
-}
-
-.sidebar ul {
-    list-style: none;
-    padding: 0;
-}
-
-.sidebar ul li {
-    margin-bottom: 15px;
-}
-
-.sidebar ul li a {
-    color: #fff;
-    text-decoration: none;
-    font-size: 16px;
-    display: block;
-    padding: 10px;
-    border-radius: 5px;
-}
-
-.sidebar ul li a:hover,
-.sidebar ul li.active a {
-    background-color: #3498db;
-}
-
-.main-content {
-    flex: 1;
-    padding: 20px;
-    background-color: var(--background-color);
-}
-
-header {
-    margin-bottom: 30px;
-}
-
+/* Tổng quan (Overview) */
 .overview {
     display: flex;
     gap: 20px;
@@ -95,25 +41,22 @@ header {
     color: #1e90ff;
 }
 
- Action Buttons 
+/* Action Buttons */
 .action-buttons {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
 }
 
-.action-btn {
+.check-in-btn {
+    background-color: #3498db;
+    color: #fff;
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
     font-size: 14px;
     cursor: pointer;
     transition: background-color 0.3s ease;
-}
-
-.check-in-btn {
-    background-color: #3498db;
-    color: #fff;
 }
 
 .check-in-btn:hover {
@@ -123,283 +66,15 @@ header {
 .check-out-btn {
     background-color: #e74c3c;
     color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
 .check-out-btn:hover {
     background-color: #c0392b;
 }
 
- /*Table Header (Filter and Search)*/ 
-.table-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.filter-btn {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 8px 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background-color: #fff;
-    cursor: pointer;
-}
-
-.filter-btn i {
-    font-size: 14px;
-}
-
-.search input {
-    padding: 8px 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 14px;
-    width: 200px;
-}
-
- Data Table 
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: #fff;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.data-table th,
-.data-table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-.data-table th {
-    background-color: #f5f5f5;
-    font-weight: 600;
-    color: #2c3e50;
-}
-
-.data-table td {
-    color: #34495e;
-}
-
-.status {
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.status.clean {
-    background-color: #2ecc71;
-    color: #fff;
-}
-
-.status.dirty {
-    background-color: #e74c3c;
-    color: #fff;
-}
-
-.status.inspected {
-    background-color: #f1c40f;
-    color: #fff;
-}
-
-.status.pick-up {
-    background-color: #3498db;
-    color: #fff;
-}
-
-.dark-mode .data-table {
-    background-color: #444;
-}
-
-.dark-mode .data-table th {
-    background-color: #555;
-    color: #fff;
-}
-
-.dark-mode .data-table td {
-    color: #ddd;
-    border-bottom: 1px solid #666;
-}
-
- Pagination 
-.pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-.page-btn {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background-color: #fff;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.page-btn:hover {
-    background-color: #f5f5f5;
-}
-
-.page-btn.active {
-    background-color: #3498db;
-    color: #fff;
-    border-color: #3498db;
-}
-
-.dark-mode .page-btn {
-    background-color: #555;
-    border-color: #666;
-    color: #fff;
-}
-
-.dark-mode .page-btn:hover {
-    background-color: #666;
-}
-
-.dark-mode .page-btn.active {
-    background-color: #1e90ff;
-    border-color: #1e90ff;
-}
-
- Form Group 
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
-    color: var(--text-color);
-}
-
-.form-group input[type="text"],
-.form-group input[type="email"],
-.form-group input[type="password"],
-.form-group select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    font-size: 14px;
-    background-color: var(--container-bg);
-    color: var(--text-color);
-}
-
-.form-group input[type="checkbox"] {
-    margin-left: 10px;
-}
-
-.add-btn {
-    background-color: #2ecc71;
-    color: #fff;
-}
-
-.add-btn:hover {
-    background-color: #27ae60;
-}
-
- Table Header 
-.table-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-
-.custom-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.modal-content {
-    background: var(--container-bg);
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px var(--shadow-color);
-    width: 300px;
-    text-align: center;
-}
-
-.modal-content h3 {
-    color: var(--title-color);
-    margin-bottom: 10px;
-}
-
-.modal-content p {
-    color: var(--text-color);
-    margin-bottom: 15px;
-}
-
-.modal-input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-}
-
-.modal-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-}
-
-.modal-buttons button {
-    padding: 8px 16px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.modal-buttons button:first-child {
-    background-color: var(--button-bg);
-    color: #fff;
-}
-
-.modal-buttons button:first-child:hover {
-    background-color: var(--button-hover-bg);
-}
-
-.modal-buttons button:last-child {
-    background-color: #e74c3c;
-    color: #fff;
-}
-
-.modal-buttons button:last-child:hover {
-    background-color: #c0392b;
-}
-
-
-.notification {
-    padding: 10px;
-    border-radius: 5px;
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-.notification.success {
-    background-color: #2ecc71;
-    color: #fff;
-}
-
-.notification.error {
-    background-color: #e74c3c;
-    color: #fff;
-}

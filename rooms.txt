@@ -1,0 +1,172 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="java.util.List" %>
+<%@ page import="com.mycompany.oceanichotel.models.Room" %>
+<%
+    String language = (String) session.getAttribute("language");
+    if (language == null) {
+        language = "en";
+        session.setAttribute("language", language);
+    }
+    String theme = (String) session.getAttribute("theme");
+    if (theme == null) {
+        theme = "light";
+        session.setAttribute("theme", theme);
+    }
+    int currentPage = request.getAttribute("currentPage") != null ? (Integer) request.getAttribute("currentPage") : 1;
+    int totalPages = request.getAttribute("totalPages") != null ? (Integer) request.getAttribute("totalPages") : 1;
+%>
+<!DOCTYPE html>
+<html lang="<%= language %>">
+<head>
+    <meta charset="UTF-8">
+    <title><%= language.equals("vi") ? "Quản lý phòng - Khách sạn Oceanic" : "Room Management - Oceanic Hotel" %></title>
+    <link rel="icon" href="<%= request.getContextPath() %>/assets/images/logo.png" type="image/x-icon">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/css/main.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/css/sidebar.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/css/table.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/css/modal.css">
+    <script>
+        window.contextPath = '<%= request.getContextPath() %>';
+        window.language = '<%= language %>';
+    </script>
+    <script src="<%= request.getContextPath() %>/assets/js/main.js" type="module" defer></script>
+    <script src="<%= request.getContextPath() %>/assets/js/theme.js" type="module" defer></script>
+    <script src="<%= request.getContextPath() %>/assets/js/language.js" type="module" defer></script>
+    <script src="<%= request.getContextPath() %>/assets/js/modal.js" type="module" defer></script>
+    <script src="<%= request.getContextPath() %>/assets/js/dropdown.js" type="module" defer></script>
+    <script type="module">
+        import { showConfirmModal, closeModal } from '<%= request.getContextPath() %>/assets/js/modal.js';
+        window.showConfirmModal = showConfirmModal;
+        window.closeModal = closeModal;
+    </script>
+</head>
+<body class="<%= theme.equals("dark") ? "dark-mode" : "" %>" data-theme="<%= theme %>">
+    <div class="admin-container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h3>Oceanic Hotel</h3>
+            </div>
+            <ul>
+                <li><a href="<%= request.getContextPath() %>/admin/dashboard"><%= language.equals("vi") ? "Tổng quan" : "Dashboard" %></a></li>
+                <li><a href="<%= request.getContextPath() %>/admin/users"><%= language.equals("vi") ? "Quản lý người dùng" : "User Management" %></a></li>
+                <li class="active"><a href="<%= request.getContextPath() %>/admin/rooms"><%= language.equals("vi") ? "Quản lý phòng" : "Room Management" %></a></li>
+                <li><a href="<%= request.getContextPath() %>/admin/bookings"><%= language.equals("vi") ? "Quản lý đặt phòng" : "Booking Management" %></a></li>
+                <li><a href="<%= request.getContextPath() %>/admin/transactions"><%= language.equals("vi") ? "Quản lý giao dịch" : "Transaction Management" %></a></li>
+                <li><a href="<%= request.getContextPath() %>/admin/settings"><%= language.equals("vi") ? "Cấu hình hệ thống" : "System Settings" %></a></li>
+                <li><a href="<%= request.getContextPath() %>/admin/reports"><%= language.equals("vi") ? "Báo cáo" : "Reports" %></a></li>
+                <li><a href="<%= request.getContextPath() %>/logout"><%= language.equals("vi") ? "Đăng xuất" : "Logout" %></a></li>
+            </ul>
+        </nav>
+        <div class="main-content">
+            <header>
+                <div class="settings">
+                    <select id="languageSelect">
+                        <option value="en" <%= language.equals("en") ? "selected" : "" %>><%= language.equals("vi") ? "Tiếng Anh" : "English" %></option>
+                        <option value="vi" <%= language.equals("vi") ? "selected" : "" %>><%= language.equals("vi") ? "Tiếng Việt" : "Vietnamese" %></option>
+                    </select>
+                    <select id="themeSelect">
+                        <option value="light" <%= theme.equals("light") ? "selected" : "" %>><%= language.equals("vi") ? "Chế độ sáng" : "Light Mode" %></option>
+                        <option value="dark" <%= theme.equals("dark") ? "selected" : "" %>><%= language.equals("vi") ? "Chế độ tối" : "Dark Mode" %></option>
+                    </select>
+                </div>
+                <h2><%= language.equals("vi") ? "Quản lý phòng" : "Room Management" %></h2>
+            </header>
+            <div class="table-header">
+                <div class="add-room">
+                    <button class="action-btn add-btn" onclick="window.location.href='<%= request.getContextPath() %>/admin/rooms/add'">
+                        <%= language.equals("vi") ? "Thêm phòng" : "Add Room" %>
+                    </button>
+                </div>
+                <div class="search">
+                    <form action="<%= request.getContextPath() %>/admin/rooms" method="GET">
+                        <input type="text" name="search" placeholder="<%= language.equals("vi") ? "Tìm kiếm theo số phòng" : "Search by room number" %>"
+                               value="<%= request.getParameter("search") != null ? request.getParameter("search") : "" %>">
+                        <button type="submit" style="display: none;"></button>
+                    </form>
+                </div>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th><%= language.equals("vi") ? "ID" : "ID" %></th>
+                        <th><%= language.equals("vi") ? "Số phòng" : "Room Number" %></th>
+                        <th><%= language.equals("vi") ? "Loại phòng" : "Room Type" %></th>
+                        <th><%= language.equals("vi") ? "Giá mỗi đêm" : "Price/Night" %></th>
+                        <th><%= language.equals("vi") ? "Trạng thái" : "Status" %></th>
+                        <th><%= language.equals("vi") ? "Ngày tạo" : "Created At" %></th>
+                        <th>...</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <%
+                        List<Room> rooms = (List<Room>) request.getAttribute("rooms");
+                        if (rooms != null) {
+                            for (Room room : rooms) {
+                    %>
+                    <tr>
+                        <td><%= room.getRoomId() %></td>
+                        <td><%= room.getRoomNumber() %></td>
+                        <td><%= room.getRoomType() %></td>
+                        <td><%= room.getPricePerNight() %></td>
+                        <td>
+                            <span class="status <%= room.isAvailable() ? "clean" : "dirty" %>">
+                                <%= room.isAvailable() ? (language.equals("vi") ? "Trống" : "Available") : (language.equals("vi") ? "Đã đặt" : "Occupied") %>
+                            </span>
+                        </td>
+                        <td><%= room.getCreatedAt() %></td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="dropdown-btn">⋮</button>
+                                <div class="dropdown-content">
+                                    <a href="#" onclick="event.preventDefault(); showConfirmModal('edit', '<%= room.getRoomId() %>')">
+                                        <%= language.equals("vi") ? "Sửa thông tin" : "Edit Room" %>
+                                    </a>
+                                    <a href="#" onclick="event.preventDefault(); showConfirmModal('delete', '<%= room.getRoomId() %>')">
+                                        <%= language.equals("vi") ? "Xóa phòng" : "Delete Room" %>
+                                    </a>
+                                    <a href="<%= request.getContextPath() %>/admin/rooms/edit-history?roomId=<%= room.getRoomId() %>">
+                                        <%= language.equals("vi") ? "Xem lịch sử chỉnh sửa" : "View Edit History" %>
+                                    </a>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <%
+                            }
+                        }
+                    %>
+                </tbody>
+            </table>
+            <div class="custom-modal" id="confirmModal" style="display: none;">
+                <div class="modal-content animate-modal">
+                    <h3><%= language.equals("vi") ? "Xác nhận" : "Confirmation" %></h3>
+                    <p id="confirmMessage"></p>
+                    <div class="modal-buttons">
+                        <button class="modal-btn confirm-btn" id="confirmYes"><%= language.equals("vi") ? "Có" : "Yes" %></button>
+                        <button class="modal-btn cancel-btn" onclick="closeModal('confirmModal')"><%= language.equals("vi") ? "Không" : "No" %></button>
+                    </div>
+                </div>
+            </div>
+            <% if (totalPages > 1) { %>
+            <div class="pagination">
+                <% if (currentPage > 1) { %>
+                <a href="<%= request.getContextPath() %>/admin/rooms?page=<%= currentPage - 1 %><%= request.getParameter("search") != null ? "&search=" + request.getParameter("search") : "" %>">
+                    <button class="page-btn">Previous</button>
+                </a>
+                <% } %>
+                <% for (int i = 1; i <= totalPages; i++) { %>
+                <a href="<%= request.getContextPath() %>/admin/rooms?page=<%= i %><%= request.getParameter("search") != null ? "&search=" + request.getParameter("search") : "" %>">
+                    <button class="page-btn <%= currentPage == i ? "active" : "" %>"><%= i %></button>
+                </a>
+                <% } %>
+                <% if (currentPage < totalPages) { %>
+                <a href="<%= request.getContextPath() %>/admin/rooms?page=<%= currentPage + 1 %><%= request.getParameter("search") != null ? "&search=" + request.getParameter("search") : "" %>">
+                    <button class="page-btn">Next</button>
+                </a>
+                <% } %>
+            </div>
+            <% } %>
+        </div>
+    </div>
+</body>
+</html>

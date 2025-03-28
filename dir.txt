@@ -1,128 +1,91 @@
-Web Pages
-
-META-INF/context.xml
-
-WEB-INF/beans.xml
-
-WEB-INF/web.xml
-
-WEB-INF/views/admin
-
-add_user.jsp
-
-booking.jsp
-
-dashboard.jsp
-
-edit_user.jsp
-
-login_history.jsp
-
-users.jsp
-
-WEB-INF/views/public
-
-dashboard.jsp
-
-login.jsp
-
-register.jsp
-
-Assets
-
-assets/css/adminDashboard.css
-
-assets/css/base.css
-
-assets/css/container.css
-
-assets/css/dashboard.css
-
-assets/css/main.css
-
-assets/css/mainAdmin.css
-
-assets/css/reset.css
-
-assets/css/settings.css
-
-assets/css/userDashboard.css
-
-assets/css/variables.css
-
-assets/images/Home-BG-Dark.png
-
-assets/images/Home-BG.png
-
-assets/images/darkbackground.png
-
-assets/images/logo.png
-
-Java Packages
-
-com.mycompany.oceanichotel.controllers.admin
-
-AdminDashboardController.java
-
-AdminUserController.java
-
-com.mycompany.oceanichotel.controllers.user
-
-ErrorHandlerServlet.java
-
-IndexServlet.java
-
-LoginController.java
-
-LogoutController.java
-
-RegisterController.java
-
-SettingsServlet.java
-
-UserDashboardController.java
-
-com.mycompany.oceanichotel.filters
-
-LoginHistory.java
-
-com.mycompany.oceanichotel.models
-
-Room.java
-
-User.java
-
-com.mycompany.oceanichotel.resources
-
-JakartaEE10Resource.java
-
-com.mycompany.oceanichotel.services.admin
-
-AdminUserService.java
-
-com.mycompany.oceanichotel.services.user
-
-UserService.java
-
-com.mycompany.oceanichotel.utils
-
-DatabaseUtil.java
-
-SecurityUtil.java
-
-Test Packages
-
-default package
-
-Other Sources
-
-src/main/resources
-
-META-INF/persistence.xml
-
-Dependencies
-
-pom.xml
-
-nb-configuration.xml
-
+OceanicHotel-1.0-SNAPSHOT
+│
+├── Web Pages
+│   ├── META-INF
+│   └── WEB-INF
+│       ├── views
+│       │   ├── admin
+│       │   │   ├── add_room.jsp
+│       │   │   ├── add_user.jsp
+│       │   │   ├── booking.jsp
+│       │   │   ├── dashboard.jsp
+│       │   │   ├── edit_room.jsp
+│       │   │   ├── edit_user.jsp
+│       │   │   ├── login_history.jsp
+│       │   │   ├── rooms.jsp
+│       │   │   └── users.jsp
+│       │   ├── common
+│       │   │   └── error-modal.jsp
+│       │   └── public
+│       │       ├── dashboard.jsp
+│       │       ├── login.jsp
+│       │       └── register.jsp
+│       ├── beans.xml
+│       └── web.xml
+│
+├── assets
+│   ├── css
+│   │   ├── base.css
+│   │   ├── container.css
+│   │   ├── dashboard.css
+│   │   ├── form.css
+│   │   ├── main.css
+│   │   ├── mainAdmin.css
+│   │   ├── modal.css
+│   │   ├── notification.css
+│   │   ├── reset.css
+│   │   ├── settings.css
+│   │   ├── sidebar.css
+│   │   └── table.css
+│   ├── images
+│   └── js
+│       ├── dropdown.js
+│       ├── error.js
+│       ├── language.js
+│       ├── main.js
+│       ├── modal.js
+│       └── theme.js
+│
+├── RESTful Web Services
+│   └── JakartaEE10Resource
+│
+├── Source Packages
+│   ├── com.mycompany.oceanichotel
+│   │   └── JakartaRestConfiguration.java
+│   ├── com.mycompany.oceanichotel.controllers.admin
+│   │   ├── AdminDashboardController.java
+│   │   ├── AdminRoomController.java
+│   │   └── AdminUserController.java
+│   ├── com.mycompany.oceanichotel.controllers.user
+│   │   ├── ErrorHandlerServlet.java
+│   │   ├── IndexServlet.java
+│   │   ├── LoginController.java
+│   │   ├── LogoutController.java
+│   │   ├── RegisterController.java
+│   │   ├── SettingsServlet.java
+│   │   └── UserDashboardController.java
+│   ├── com.mycompany.oceanichotel.filters
+│   │   └── AccessFilter.java
+│   ├── com.mycompany.oceanichotel.models
+│   │   ├── LoginHistory.java
+│   │   ├── Room.java
+│   │   └── User.java
+│   ├── com.mycompany.oceanichotel.resources
+│   │   └── JakartaEE10Resource.java
+│   ├── com.mycompany.oceanichotel.services.admin
+│   │   ├── AdminRoomService.java
+│   │   └── AdminUserService.java
+│   ├── com.mycompany.oceanichotel.services.user
+│   │   └── UserService.java
+│   └── com.mycompany.oceanichotel.utils
+│       ├── DatabaseUtil.java
+│       └── SecurityUtil.java
+│
+├── Test Packages
+├── Other Sources
+├── Dependencies
+├── Java Dependencies
+│   └── JDK 21 (Default)
+└── Project Files
+    └── pom.xml
+    └── nb-configuration.xml

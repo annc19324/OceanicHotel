@@ -1,3 +1,4 @@
+/* Form styles */
 .form-group {
     margin-bottom: 20px;
 }
@@ -13,13 +14,23 @@
 .form-group input[type="email"],
 .form-group input[type="password"],
 .form-group select {
-    width: 100%;
+    width: 50%;
     padding: 10px;
     border: 1px solid var(--border-color);
     border-radius: 5px;
     font-size: 14px;
     background-color: var(--container-bg);
     color: var(--text-color);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="email"]:focus,
+.form-group input[type="password"]:focus,
+.form-group select:focus {
+    border-color: var(--button-bg);
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+    outline: none;
 }
 
 .form-group input[type="checkbox"] {
@@ -29,35 +40,4 @@
 .form-buttons {
     display: flex;
     gap: 10px;
-}
-
-.action-btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.add-btn {
-    background-color: #2ecc71;
-    color: #fff;
-}
-
-.add-btn:hover {
-    background-color: #27ae60;
-}
-
-.cancel-btn {
-    background-color: #e74c3c;
-    color: #fff;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.cancel-btn:hover {
-    background-color: #c0392b;
 }
