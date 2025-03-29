@@ -2,6 +2,7 @@ package com.mycompany.oceanichotel.services.admin;
 
 import com.mycompany.oceanichotel.models.User;
 import com.mycompany.oceanichotel.utils.DatabaseUtil;
+import com.mycompany.oceanichotel.utils.SecurityUtil;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,6 +16,7 @@ public class AdminUserService {
 
     private static final int PAGE_SIZE = 10;
     private static final Logger LOGGER = Logger.getLogger(AdminUserService.class.getName());
+    private SecurityUtil securityUtil;
 
     public boolean isUsernameExists(String username, Integer excludeUserId) throws SQLException {
         String query = "SELECT COUNT(*) FROM Users WHERE username = ? AND (user_id != ? OR ? IS NULL)";
@@ -123,10 +125,11 @@ public class AdminUserService {
             throw new SQLException("Email already exists: " + user.getEmail());
         }
         String query = "INSERT INTO Users (username, email, password, role, created_at) VALUES (?, ?, ?, ?, GETDATE())";
+        String hashedPassword = SecurityUtil.hashPassword(user.getPassword());
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, user.getUsername());
             stmt.setString(2, user.getEmail());
-            stmt.setString(3, user.getPassword()); // Nên mã hóa mật khẩu trong thực tế
+            stmt.setString(3, hashedPassword); // Nên mã hóa mật khẩu trong thực tế
             stmt.setString(4, user.getRole());
             stmt.executeUpdate();
         }
@@ -139,6 +142,7 @@ public class AdminUserService {
         if (isEmailExists(user.getEmail(), user.getUserId())) {
             throw new SQLException("Email already exists: " + user.getEmail());
         }
+        String hashedPassword = SecurityUtil.hashPassword(user.getPassword());
         String query = "UPDATE Users SET username = ?, email = ?, role = ?" + 
                       (user.getPassword() != null ? ", password = ?" : "") + 
                       " WHERE user_id = ?";
@@ -148,7 +152,7 @@ public class AdminUserService {
             stmt.setString(3, user.getRole());
             int paramIndex = 4;
             if (user.getPassword() != null) {
-                stmt.setString(paramIndex++, user.getPassword());
+                stmt.setString(paramIndex++, hashedPassword);
             }
             stmt.setInt(paramIndex, user.getUserId());
             stmt.executeUpdate();

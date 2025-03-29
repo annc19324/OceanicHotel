@@ -2,6 +2,7 @@ D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\controllers\admin\
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\filters\AccessFilter.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\models\Transaction.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\services\admin\AdminBookingService.java
+D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\controllers\user\UserHomeController.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\models\LoginHistory.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\controllers\admin\AdminBookingController.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\services\user\UserService.java
@@ -10,7 +11,9 @@ D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\resources\JakartaE
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\services\admin\AdminTransactionService.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\controllers\admin\AdminUserController.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\models\Room.java
+D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\models\RoomTypeImage.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\services\admin\AdminSettingsService.java
+D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\models\RoomType.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\controllers\admin\AdminTransactionController.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\controllers\user\LoginController.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\services\user\UserDashboardService.java
@@ -19,7 +22,9 @@ D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\controllers\admin\
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\controllers\user\ErrorHandlerServlet.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\services\admin\AdminReportService.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\utils\SecurityUtil.java
+D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\services\admin\AdminRoomTypeService.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\models\Booking.java
+D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\services\user\UserRoomService.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\controllers\user\IndexServlet.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\controllers\user\SettingsServlet.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\services\admin\AdminUserService.java
@@ -28,6 +33,7 @@ D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\JakartaRestConfigu
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\controllers\user\RegisterController.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\models\User.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\controllers\admin\AdminSettingsController.java
+D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\controllers\admin\AdminRoomTypeController.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\controllers\user\LogoutController.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\services\admin\AdminRoomService.java
 D:\demo\OceanicHotel\src\main\java\com\mycompany\oceanichotel\controllers\admin\AdminRoomController.java

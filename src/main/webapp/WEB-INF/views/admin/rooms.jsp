@@ -85,7 +85,8 @@
                 <ul>
                     <li><a href="<%= request.getContextPath()%>/admin/dashboard"><%= language.equals("vi") ? "Tổng quan" : "Dashboard"%></a></li>
                     <li><a href="<%= request.getContextPath()%>/admin/users"><%= language.equals("vi") ? "Quản lý người dùng" : "User Management"%></a></li>
-                    <li class="active"><a href="<%= request.getContextPath()%>/admin/rooms"><%= language.equals("vi") ? "Quản lý phòng" : "Room Management"%></a></li>
+                    <li><a href="<%= request.getContextPath() %>/admin/room-types"><%= language.equals("vi") ? "Quản lý loại phòng" : "Room Type Management" %></a></li>
+                    <li class="active"><a href="<%= request.getContextPath()%>/admin/rooms" class="active"><%= language.equals("vi") ? "Quản lý phòng" : "Room Management"%></a></li>
                     <li><a href="<%= request.getContextPath()%>/admin/bookings"><%= language.equals("vi") ? "Quản lý đặt phòng" : "Booking Management"%></a></li>
                     <li><a href="<%= request.getContextPath()%>/admin/transactions"><%= language.equals("vi") ? "Quản lý giao dịch" : "Transaction Management"%></a></li>
                     <li><a href="<%= request.getContextPath()%>/admin/settings"><%= language.equals("vi") ? "Cấu hình hệ thống" : "System Settings"%></a></li>
@@ -116,12 +117,12 @@
                             <th><%= language.equals("vi") ? "Số phòng" : "Room Number"%></th>
                             <th><%= language.equals("vi") ? "Loại phòng" : "Room Type"%></th>
                             <th><%= language.equals("vi") ? "Giá mỗi đêm" : "Price/Night"%></th>
-                            <th><%= language.equals("vi") ? "Hình ảnh" : "Image"%></th>
+                            <!--<th><%= language.equals("vi") ? "Hình ảnh" : "Image"%></th>-->
                             <th><%= language.equals("vi") ? "Số người lớn tối đa" : "Max Adults"%></th>
                             <th><%= language.equals("vi") ? "Số trẻ em tối đa" : "Max Children"%></th>
                             <th><%= language.equals("vi") ? "Trạng thái" : "Status"%></th>
-                            <th><%= language.equals("vi") ? "Ngày tạo" : "Created At"%></th>
-                            <th>...</th>
+                            <!--<th><%= language.equals("vi") ? "Ngày tạo" : "Created At"%></th>-->
+                            <th> </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -133,15 +134,8 @@
                         <tr>
                             <td><%= room.getRoomId()%></td>
                             <td><%= room.getRoomNumber()%></td>
-                            <td><%= room.getRoomType()%></td>
-                            <td><%= room.getPricePerNight()%></td>
-                            <td>
-                                <% if (room.getImageUrl() != null && !room.getImageUrl().isEmpty()) {%>
-                                <img src="<%= request.getContextPath()%>/assets/images/rooms/<%= room.getImageUrl()%>" alt="<%= room.getRoomNumber()%>" style="width: 50px; height: 50px;">
-                                <% } else { %>
-                                N/A
-                                <% }%>
-                            </td>
+                           <td><%= room.getRoomType() != null ? room.getRoomType().getTypeName() : "N/A" %></td>
+                <td><%= String.format("%.1f VNĐ", room.getPricePerNight()) %></td>
                             <td><%= room.getMaxAdults()%></td>
                             <td><%= room.getMaxChildren()%></td>
                             <td>
@@ -149,7 +143,9 @@
                                     <%= room.isAvailable() ? (language.equals("vi") ? "Trống" : "Available") : (language.equals("vi") ? "Đã đặt" : "Occupied")%>
                                 </span>
                             </td>
-                            <td><%= room.getCreatedAt()%></td>
+                            <!--<td>
+    <%--<%= room.getCreatedAt()%>--%>
+<!--</td>-->
                             <td>
                                 <div class="dropdown">
                                     <button class="dropdown-btn">⋮</button>
