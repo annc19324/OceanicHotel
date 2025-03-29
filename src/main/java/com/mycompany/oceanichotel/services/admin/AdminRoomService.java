@@ -71,6 +71,9 @@ public class AdminRoomService {
                 room.setPricePerNight(rs.getDouble("price_per_night"));
                 room.setAvailable(rs.getBoolean("is_available"));
                 room.setDescription(rs.getString("description"));
+                room.setImageUrl(rs.getString("image_url"));
+                room.setMaxAdults(rs.getInt("max_adults"));
+                room.setMaxChildren(rs.getInt("max_children"));
                 room.setCreatedAt(rs.getTimestamp("created_at"));
                 rooms.add(room);
             }
@@ -121,6 +124,9 @@ public class AdminRoomService {
                 room.setPricePerNight(rs.getDouble("price_per_night"));
                 room.setAvailable(rs.getBoolean("is_available"));
                 room.setDescription(rs.getString("description"));
+                room.setImageUrl(rs.getString("image_url"));
+                room.setMaxAdults(rs.getInt("max_adults"));
+                room.setMaxChildren(rs.getInt("max_children"));
                 room.setCreatedAt(rs.getTimestamp("created_at"));
                 return room;
             }
@@ -132,13 +138,16 @@ public class AdminRoomService {
         if (isRoomNumberExists(room.getRoomNumber(), null)) {
             throw new SQLException("Room number already exists: " + room.getRoomNumber());
         }
-        String query = "INSERT INTO Rooms (room_number, room_type, price_per_night, is_available, description, created_at) VALUES (?, ?, ?, ?, ?, GETDATE())";
+        String query = "INSERT INTO Rooms (room_number, room_type, price_per_night, is_available, description, image_url, max_adults, max_children, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, GETDATE())";
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, room.getRoomNumber());
             stmt.setString(2, room.getRoomType());
             stmt.setDouble(3, room.getPricePerNight());
             stmt.setBoolean(4, room.isAvailable());
             stmt.setString(5, room.getDescription());
+            stmt.setString(6, room.getImageUrl());
+            stmt.setInt(7, room.getMaxAdults());
+            stmt.setInt(8, room.getMaxChildren());
             stmt.executeUpdate();
         }
     }
@@ -147,14 +156,17 @@ public class AdminRoomService {
         if (isRoomNumberExists(room.getRoomNumber(), room.getRoomId())) {
             throw new SQLException("Room number already exists: " + room.getRoomNumber());
         }
-        String query = "UPDATE Rooms SET room_number = ?, room_type = ?, price_per_night = ?, is_available = ?, description = ? WHERE room_id = ?";
+        String query = "UPDATE Rooms SET room_number = ?, room_type = ?, price_per_night = ?, is_available = ?, description = ?, image_url = ?, max_adults = ?, max_children = ? WHERE room_id = ?";
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, room.getRoomNumber());
             stmt.setString(2, room.getRoomType());
             stmt.setDouble(3, room.getPricePerNight());
             stmt.setBoolean(4, room.isAvailable());
             stmt.setString(5, room.getDescription());
-            stmt.setInt(6, room.getRoomId());
+            stmt.setString(6, room.getImageUrl());
+            stmt.setInt(7, room.getMaxAdults());
+            stmt.setInt(8, room.getMaxChildren());
+            stmt.setInt(9, room.getRoomId());
             stmt.executeUpdate();
         }
     }

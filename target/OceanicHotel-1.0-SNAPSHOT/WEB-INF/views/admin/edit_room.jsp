@@ -27,9 +27,10 @@
 <body class="<%= theme.equals("dark") ? "dark-mode" : "" %>" data-theme="<%= theme %>">
     <div class="admin-container">
         <nav class="sidebar">
-            <div class="sidebar-header">
-                <h3>Oceanic Hotel</h3>
-            </div>
+                <div class="sidebar-header">
+                    <a style="color: white; margin-bottom: 20px; font-size: 24px; font-weight: 600; letter-spacing: 0.5px;" href="<%= request.getContextPath()%>/admin/dashboard">Oceanic Hotel
+                    </a>
+                </div>
             <ul>
                 <li><a href="<%= request.getContextPath() %>/admin/dashboard"><%= language.equals("vi") ? "Tổng quan" : "Dashboard" %></a></li>
                 <li><a href="<%= request.getContextPath() %>/admin/users"><%= language.equals("vi") ? "Quản lý người dùng" : "User Management" %></a></li>
@@ -42,51 +43,54 @@
             </ul>
         </nav>
         <div class="main-content">
-            <header>
-                <div class="settings">
-                    <select id="languageSelect" onchange="changeLanguage()">
-                        <option value="en" <%= language.equals("en") ? "selected" : "" %>><%= language.equals("vi") ? "Tiếng Anh" : "English" %></option>
-                        <option value="vi" <%= language.equals("vi") ? "selected" : "" %>><%= language.equals("vi") ? "Tiếng Việt" : "Vietnamese" %></option>
-                    </select>
-                    <select id="themeSelect" onchange="changeTheme()">
-                        <option value="light" <%= theme.equals("light") ? "selected" : "" %>><%= language.equals("vi") ? "Chế độ sáng" : "Light Mode" %></option>
-                        <option value="dark" <%= theme.equals("dark") ? "selected" : "" %>><%= language.equals("vi") ? "Chế độ tối" : "Dark Mode" %></option>
-                    </select>
-                </div>
-                <h2><%= language.equals("vi") ? "Sửa phòng" : "Edit Room" %></h2>
-            </header>
-            <form action="<%= request.getContextPath() %>/admin/rooms/update" method="POST">
-                <input type="hidden" name="roomId" value="<%= room.getRoomId() %>">
-                <div class="form-group">
-                    <label for="roomNumber"><%= language.equals("vi") ? "Số phòng" : "Room Number" %></label>
-                    <input type="text" id="roomNumber" name="roomNumber" value="<%= room.getRoomNumber() %>" required>
-                </div>
-                <div class="form-group">
-                    <label for="roomType"><%= language.equals("vi") ? "Loại phòng" : "Room Type" %></label>
-                    <select id="roomType" name="roomType" required>
-                        <option value="Single" <%= room.getRoomType().equals("Single") ? "selected" : "" %>><%= language.equals("vi") ? "Phòng đơn" : "Single" %></option>
-                        <option value="Double" <%= room.getRoomType().equals("Double") ? "selected" : "" %>><%= language.equals("vi") ? "Phòng đôi" : "Double" %></option>
-                        <option value="Suite" <%= room.getRoomType().equals("Suite") ? "selected" : "" %>><%= language.equals("vi") ? "Suite" : "Suite" %></option>
-                        <option value="Deluxe" <%= room.getRoomType().equals("Deluxe") ? "selected" : "" %>><%= language.equals("vi") ? "Deluxe" : "Deluxe" %></option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="pricePerNight"><%= language.equals("vi") ? "Giá mỗi đêm" : "Price per Night" %></label>
-                    <input type="number" id="pricePerNight" name="pricePerNight" step="0.01" value="<%= room.getPricePerNight() %>" required>
-                </div>
-                <div class="form-group">
-                    <label for="isAvailable"><%= language.equals("vi") ? "Trạng thái" : "Available" %></label>
-                    <input type="checkbox" id="isAvailable" name="isAvailable" value="true" <%= room.isAvailable() ? "checked" : "" %>>
-                </div>
-                <div class="form-group">
-                    <label for="description"><%= language.equals("vi") ? "Mô tả" : "Description" %></label>
-                    <textarea id="description" name="description"><%= room.getDescription() != null ? room.getDescription() : "" %></textarea>
-                </div>
-                <div class="form-buttons">
-                    <button type="submit" class="action-btn add-btn"><%= language.equals("vi") ? "Lưu" : "Save" %></button>
-                    <a href="<%= request.getContextPath() %>/admin/rooms" class="action-btn cancel-btn"><%= language.equals("vi") ? "Hủy" : "Cancel" %></a>
-                </div>
-            </form>
+            
+            <form action="<%= request.getContextPath() %>/admin/rooms/update" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="roomId" value="<%= room.getRoomId() %>">
+    <div class="form-group">
+        <label for="roomNumber"><%= language.equals("vi") ? "Số phòng" : "Room Number" %></label>
+        <input type="text" id="roomNumber" name="roomNumber" value="<%= room.getRoomNumber() %>" required>
+    </div>
+    <div class="form-group">
+        <label for="roomType"><%= language.equals("vi") ? "Loại phòng" : "Room Type" %></label>
+        <select id="roomType" name="roomType" required>
+            <option value="Single" <%= room.getRoomType().equals("Single") ? "selected" : "" %>><%= language.equals("vi") ? "Phòng đơn" : "Single" %></option>
+            <option value="Double" <%= room.getRoomType().equals("Double") ? "selected" : "" %>><%= language.equals("vi") ? "Phòng đôi" : "Double" %></option>
+            <option value="Suite" <%= room.getRoomType().equals("Suite") ? "selected" : "" %>><%= language.equals("vi") ? "Suite" : "Suite" %></option>
+            <option value="Deluxe" <%= room.getRoomType().equals("Deluxe") ? "selected" : "" %>><%= language.equals("vi") ? "Deluxe" : "Deluxe" %></option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="pricePerNight"><%= language.equals("vi") ? "Giá mỗi đêm" : "Price per Night" %></label>
+        <input type="number" id="pricePerNight" name="pricePerNight" step="0.01" value="<%= room.getPricePerNight() %>" required>
+    </div>
+    <div class="form-group">
+        <label for="image"><%= language.equals("vi") ? "Hình ảnh" : "Image" %></label>
+        <input type="file" id="image" name="image" accept="image/*">
+        <% if (room.getImageUrl() != null && !room.getImageUrl().isEmpty()) { %>
+            <img src="<%= request.getContextPath() %>/assets/images/rooms/<%= room.getImageUrl() %>" alt="<%= room.getRoomNumber() %>" style="width: 100px; height: 100px;">
+        <% } %>
+    </div>
+    <div class="form-group">
+        <label for="maxAdults"><%= language.equals("vi") ? "Số người lớn tối đa" : "Max Adults" %></label>
+        <input type="number" id="maxAdults" name="maxAdults" min="1" value="<%= room.getMaxAdults() %>" required>
+    </div>
+    <div class="form-group">
+        <label for="maxChildren"><%= language.equals("vi") ? "Số trẻ em tối đa" : "Max Children" %></label>
+        <input type="number" id="maxChildren" name="maxChildren" min="0" value="<%= room.getMaxChildren() %>" required>
+    </div>
+    <div class="form-group">
+        <label for="isAvailable"><%= language.equals("vi") ? "Trạng thái" : "Available" %></label>
+        <input type="checkbox" id="isAvailable" name="isAvailable" value="true" <%= room.isAvailable() ? "checked" : "" %>>
+    </div>
+    <div class="form-group">
+        <label for="description"><%= language.equals("vi") ? "Mô tả" : "Description" %></label>
+        <textarea id="description" name="description"><%= room.getDescription() != null ? room.getDescription() : "" %></textarea>
+    </div>
+    <div class="form-buttons">
+        <button type="submit" class="action-btn add-btn"><%= language.equals("vi") ? "Lưu" : "Save" %></button>
+        <a href="<%= request.getContextPath() %>/admin/rooms" class="action-btn cancel-btn"><%= language.equals("vi") ? "Hủy" : "Cancel" %></a>
+    </div>
+</form>
             <% if (error != null) { %>
             <div class="custom-modal" id="errorModal" style="display: flex;">
                 <div class="modal-content animate-modal">

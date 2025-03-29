@@ -3,10 +3,13 @@ package com.mycompany.oceanichotel.controllers.admin;
 import com.mycompany.oceanichotel.models.Room;
 import com.mycompany.oceanichotel.services.admin.AdminRoomService;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -14,10 +17,14 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 
 @WebServlet("/admin/rooms/*")
+@MultipartConfig(fileSizeThreshold = 1024 * 1024 * 2, // 2MB
+                 maxFileSize = 1024 * 1024 * 10,      // 10MB
+                 maxRequestSize = 1024 * 1024 * 50)   // 50MB
 public class AdminRoomController extends HttpServlet {
 
     private AdminRoomService roomService;
     private static final Logger LOGGER = Logger.getLogger(AdminRoomController.class.getName());
+    private static final String UPLOAD_DIR = "assets/images/rooms";
 
     @Override
     public void init() throws ServletException {
@@ -85,6 +92,20 @@ public class AdminRoomController extends HttpServlet {
                 room.setPricePerNight(Double.parseDouble(request.getParameter("pricePerNight")));
                 room.setAvailable("true".equals(request.getParameter("isAvailable")));
                 room.setDescription(request.getParameter("description"));
+                room.setMaxAdults(Integer.parseInt(request.getParameter("maxAdults")));
+                room.setMaxChildren(Integer.parseInt(request.getParameter("maxChildren")));
+
+                // Xử lý upload file ảnh
+                Part filePart = request.getPart("image");
+                if (filePart != null && filePart.getSize() > 0) {
+                    String fileName = extractFileName(filePart);
+                    String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIR;
+                    File uploadDir = new File(uploadPath);
+                    if (!uploadDir.exists()) uploadDir.mkdir();
+                    filePart.write(uploadPath + File.separator + fileName);
+                    room.setImageUrl(fileName);
+                }
+
                 try {
                     roomService.addRoom(room);
                     response.sendRedirect(request.getContextPath() + "/admin/rooms?message=add_success");
@@ -105,6 +126,23 @@ public class AdminRoomController extends HttpServlet {
                 room.setPricePerNight(Double.parseDouble(request.getParameter("pricePerNight")));
                 room.setAvailable("true".equals(request.getParameter("isAvailable")));
                 room.setDescription(request.getParameter("description"));
+                room.setMaxAdults(Integer.parseInt(request.getParameter("maxAdults")));
+                room.setMaxChildren(Integer.parseInt(request.getParameter("maxChildren")));
+
+                // Xử lý upload file ảnh
+                Part filePart = request.getPart("image");
+                if (filePart != null && filePart.getSize() > 0) {
+                    String fileName = extractFileName(filePart);
+                    String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIR;
+                    File uploadDir = new File(uploadPath);
+                    if (!uploadDir.exists()) uploadDir.mkdir();
+                    filePart.write(uploadPath + File.separator + fileName);
+                    room.setImageUrl(fileName);
+                } else {
+                    Room existingRoom = roomService.getRoomById(roomId);
+                    room.setImageUrl(existingRoom.getImageUrl()); // Giữ nguyên ảnh cũ nếu không upload ảnh mới
+                }
+
                 try {
                     roomService.updateRoom(room);
                     response.sendRedirect(request.getContextPath() + "/admin/rooms?message=update_success");
@@ -129,5 +167,16 @@ public class AdminRoomController extends HttpServlet {
             LOGGER.log(Level.WARNING, "Invalid roomId or price in doPost: " + request.getParameter("roomId"), e);
             response.sendRedirect(request.getContextPath() + "/admin/rooms?error=invalid_input");
         }
+    }
+
+    private String extractFileName(Part part) {
+        String contentDisp = part.getHeader("content-disposition");
+        String[] items = contentDisp.split(";");
+        for (String s : items) {
+            if (s.trim().startsWith("filename")) {
+                return s.substring(s.indexOf("=") + 2, s.length() - 1);
+            }
+        }
+        return "";
     }
 }

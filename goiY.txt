@@ -1,0 +1,412 @@
+
+OceanicHotel-1.0-SNAPSHOT
+|
+├── Web Pages
+│   ├── META-INF
+│   ├── WEB-INF
+│   │   ├── beans.xml
+│   │   └── web.xml
+│   └── views
+│       ├── admin
+│       │   ├── add_room.jsp
+│       │   ├── add_user.jsp
+│       │   ├── bookings.jsp
+│       │   ├── dashboard.jsp
+│       │   ├── edit_room.jsp
+│       │   ├── edit_user.jsp
+│       │   ├── login_history.jsp
+│       │   ├── reports.jsp
+│       │   ├── rooms.jsp
+│       │   ├── settings.jsp
+│       │   ├── transactions.jsp
+│       │   └── users.jsp
+│       └── public
+│           ├── dashboard.jsp
+│           ├── login.jsp
+│           ├── register.jsp
+│           └── surpriseMotherFather.jsp
+|
+├── assets
+│   ├── css
+│   │   ├── base.css
+│   │   ├── button.css
+│   │   ├── container.css
+│   │   ├── dashboard.css
+│   │   ├── form.css
+│   │   ├── main.css
+│   │   ├── modal.css
+│   │   ├── notification.css
+│   │   ├── reset.css
+│   │   ├── settings.css
+│   │   ├── sidebar.css
+│   │   ├── table.css
+│   │   └── variables.css
+│   ├── images
+│   │   ├── Home-BG-Dark.png
+│   │   ├── Home-BG.png
+│   │   ├── darkbackground.png
+│   │   └── logo.png
+│   └── js
+│       ├── dropdown.js
+│       ├── error.js
+│       ├── language.js
+│       ├── main.js
+│       ├── modal.js
+│       └── theme.js
+|
+├── RESTful Web Services
+│   ├── com.mycompany.oceanichotel.controller
+│   │   ├── AdminBookingController.java
+│   │   ├── AdminDashboardController.java
+│   │   ├── AdminReportController.java
+│   │   ├── AdminRoomController.java
+│   │   ├── AdminSettingsController.java
+│   │   ├── AdminTransactionController.java
+│   │   ├── AdminUserController.java
+│   │   └── UserDashboardController.java
+│   ├── com.mycompany.oceanichotel.model
+│   │   ├── Booking.java
+│   │   ├── LoginHistory.java
+│   │   ├── Room.java
+│   │   ├── Transaction.java
+│   │   └── User.java
+│   ├── com.mycompany.oceanichotel.resource
+│   │   └── JakartaEE10Resource.java
+│   ├── com.mycompany.oceanichotel.service
+│   │   ├── AdminBookingService.java
+│   │   ├── AdminReportService.java
+│   │   ├── AdminRoomService.java
+│   │   ├── AdminSettingsService.java
+│   │   ├── AdminTransactionService.java
+│   │   └── AdminUserService.java
+│   ├── com.mycompany.oceanichotel.util
+│   │   ├── DatabaseUtil.java
+│   │   └── SecurityUtil.java
+│   └── com.mycompany.oceanichotel.filters
+│
+└── pom.xml
+
+
+USE OceanHotel;
+
+-- Bảng Users (giữ nguyên từ bạn)
+CREATE TABLE Users 
+(
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL, -- Lưu password đã được hash
+    email VARCHAR(100) UNIQUE NOT NULL,
+    role ENUM('admin', 'user') DEFAULT 'user',
+    avatar VARCHAR(255), -- Đường dẫn đến ảnh đại diện (có thể NULL)
+    is_active BOOLEAN DEFAULT TRUE, -- Tài khoản có hoạt động hay không
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Bảng Rooms (cũ)
+CREATE TABLE Rooms 
+(
+    room_id INT AUTO_INCREMENT PRIMARY KEY,
+    room_number VARCHAR(10) UNIQUE NOT NULL, -- Ví dụ: 101, 102, 201, 202,...
+    room_type ENUM('Single', 'Double', 'Suite', 'Deluxe') NOT NULL,
+    price_per_night DECIMAL(10, 2) NOT NULL, -- Giá phòng theo đêm
+    is_available BOOLEAN DEFAULT TRUE, -- Phòng còn trống hay không
+    description TEXT, -- Mô tả thêm về phòng (có thể NULL)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+--mới
+CREATE TABLE Rooms 
+(
+    room_id INT AUTO_INCREMENT PRIMARY KEY,
+    room_number VARCHAR(10) UNIQUE NOT NULL,
+    room_type ENUM('Single', 'Double', 'Suite', 'Deluxe') NOT NULL,
+    price_per_night DECIMAL(10, 2) NOT NULL,
+    is_available BOOLEAN DEFAULT TRUE,
+    description TEXT,
+    image_url VARCHAR(255), -- Đường dẫn đến hình ảnh phòng
+    max_adults INT NOT NULL DEFAULT 2, -- Số người lớn tối đa, mặc định 2
+    max_children INT NOT NULL DEFAULT 0, -- Số trẻ em tối đa, mặc định 0
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Bảng Bookings (giữ nguyên từ bạn) cũ
+CREATE TABLE Bookings
+(
+    booking_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL, -- Người đặt phòng
+    room_id INT NOT NULL, -- Phòng được đặt
+    check_in_date DATE NOT NULL, -- Ngày nhận phòng
+    check_out_date DATE NOT NULL, -- Ngày trả phòng
+    total_price DECIMAL(10, 2) NOT NULL, -- Tổng giá (tính từ số ngày và giá phòng)
+    status ENUM('Pending', 'Confirmed', 'Cancelled') DEFAULT 'Pending', -- Trạng thái đặt phòng
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id),
+    FOREIGN KEY (room_id) REFERENCES Rooms(room_id)
+);
+
+--mới
+CREATE TABLE Bookings 
+(
+    booking_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    room_id INT NOT NULL,
+    check_in_date DATE NOT NULL,
+    check_out_date DATE NOT NULL,
+    total_price DECIMAL(10, 2) NOT NULL,
+    status ENUM('Pending', 'Confirmed', 'Cancelled') DEFAULT 'Pending',
+    num_adults INT NOT NULL DEFAULT 1, -- Số người lớn, mặc định 1
+    num_children INT NOT NULL DEFAULT 0, -- Số trẻ em, mặc định 0
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id),
+    FOREIGN KEY (room_id) REFERENCES Rooms(room_id)
+);
+
+-- Bảng Booking_History (giữ nguyên từ bạn)
+CREATE TABLE Booking_History 
+(
+    history_id INT AUTO_INCREMENT PRIMARY KEY,
+    booking_id INT NOT NULL, -- Tham chiếu đến đặt phòng
+    changed_by INT NOT NULL, -- Người thực hiện thay đổi (admin hoặc user)
+    old_status ENUM('Pending', 'Confirmed', 'Cancelled'), -- Trạng thái cũ
+    new_status ENUM('Pending', 'Confirmed', 'Cancelled'), -- Trạng thái mới
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Thời gian thay đổi
+    FOREIGN KEY (booking_id) REFERENCES Bookings(booking_id),
+    FOREIGN KEY (changed_by) REFERENCES Users(user_id)
+);
+
+-- Bảng Room_Edit_History (giữ nguyên từ bạn)
+CREATE TABLE Room_Edit_History 
+(
+    history_id INT AUTO_INCREMENT PRIMARY KEY,
+    room_id INT NOT NULL, -- Tham chiếu đến phòng
+    changed_by INT NOT NULL, -- Người thực hiện thay đổi (admin)
+    change_description TEXT NOT NULL, -- Mô tả thay đổi (ví dụ: "Giá phòng thay đổi từ 500,000 VND lên 600,000 VND")
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Thời gian thay đổi
+    FOREIGN KEY (room_id) REFERENCES Rooms(room_id),
+    FOREIGN KEY (changed_by) REFERENCES Users(user_id)
+);
+
+-- Bảng Login_History (giữ nguyên từ bạn)
+CREATE TABLE Login_History 
+(
+    login_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL, -- Tham chiếu đến người dùng
+    login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Thời gian đăng nhập
+    ip_address VARCHAR(45), -- Địa chỉ IP
+    FOREIGN KEY (user_id) REFERENCES Users(user_id)
+);
+
+-- Bảng Transactions (bổ sung từ tôi)
+CREATE TABLE Transactions 
+(
+    transaction_id INT AUTO_INCREMENT PRIMARY KEY,
+    booking_id INT NOT NULL, -- Tham chiếu đến đặt phòng
+    user_id INT NOT NULL, -- Người thực hiện giao dịch
+    amount DECIMAL(10, 2) NOT NULL, -- Số tiền giao dịch
+    status ENUM('Success', 'Failed', 'Pending') DEFAULT 'Pending', -- Trạng thái giao dịch
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (booking_id) REFERENCES Bookings(booking_id),
+    FOREIGN KEY (user_id) REFERENCES Users(user_id)
+);
+
+-- Bảng Settings (bổ sung từ tôi)
+CREATE TABLE Settings 
+(
+    setting_id INT AUTO_INCREMENT PRIMARY KEY,
+    setting_key VARCHAR(50) NOT NULL UNIQUE, -- Ví dụ: 'default_language', 'default_theme'
+    setting_value VARCHAR(255) NOT NULL, -- Ví dụ: 'en', 'light'
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+NetBeans IDE cho phát triển ứng dụng và quản lý dự án.
+Maven để xây dựng và quản lý phụ thuộc.
+Apache Tomcat 10.1 cho việc triển khai và chạy ứng dụng web.
+Jakarta EE 10 Web làm nền tảng cho phát triển ứng dụng web Java.
+
+
+1. Quản lý người dùng (Users)
+•	Danh sách: Từ Users (username, email, role, is_active, created_at).
+•	Chỉnh sửa: Thay đổi role, is_active, hoặc xóa user.
+•	Lịch sử đăng nhập: Từ Login_History (login_time, ip_address).
+2. Quản lý phòng (Rooms)
+•	Danh sách: Từ Rooms (room_number, room_type, price_per_night, is_available).
+•	Cập nhật: Thay đổi price_per_night, is_available, hoặc thêm phòng mới.
+•	Lịch sử chỉnh sửa: Từ Room_Edit_History (change_description, changed_by, changed_at).
+3. Quản lý đặt phòng (Bookings)
+•	Danh sách: Từ Bookings (booking_id, user_id, room_id, check_in_date, check_out_date, total_price, status).
+•	Cập nhật trạng thái: Thay đổi status (Pending → Confirmed/Cancelled).
+•	Lịch sử thay đổi: Từ Booking_History (old_status, new_status, changed_by, changed_at).
+4. Quản lý giao dịch (Transactions)
+•	Danh sách: Từ Transactions (transaction_id, booking_id, amount, status, created_at).
+•	Thống kê: Tổng doanh thu, số giao dịch thành công/thất bại.
+5. Cấu hình hệ thống (Settings)
+•	Cài đặt: Từ Settings (default_language, default_theme).
+•	Áp dụng: Cập nhật giá trị trong Settings để thay đổi giao diện mặc định.
+6. Báo cáo
+•	Doanh thu: Tổng amount từ Transactions theo ngày/tháng.
+•	Tỷ lệ sử dụng phòng: Đếm is_available từ Rooms và số Bookings Confirmed.
+
+package com.mycompany.oceanichotel.services.admin;
+
+import com.mycompany.oceanichotel.models.User;
+import com.mycompany.oceanichotel.utils.DatabaseUtil;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
+public class AdminUserService {
+
+    private static final int PAGE_SIZE = 10;
+    private static final Logger LOGGER = Logger.getLogger(AdminUserService.class.getName());
+
+    public boolean isUsernameExists(String username, Integer excludeUserId) throws SQLException {
+        String query = "SELECT COUNT(*) FROM Users WHERE username = ? AND (user_id != ? OR ? IS NULL)";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, username);
+            stmt.setObject(2, excludeUserId, java.sql.Types.INTEGER);
+            stmt.setObject(3, excludeUserId, java.sql.Types.INTEGER);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        }
+        return false;
+    }
+
+    public boolean isEmailExists(String email, Integer excludeUserId) throws SQLException {
+        String query = "SELECT COUNT(*) FROM Users WHERE email = ? AND (user_id != ? OR ? IS NULL)";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, email);
+            stmt.setObject(2, excludeUserId, java.sql.Types.INTEGER);
+            stmt.setObject(3, excludeUserId, java.sql.Types.INTEGER);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        }
+        return false;
+    }
+
+    public List<User> getUsers(int page, String search) throws SQLException {
+        if (page < 1) {
+            LOGGER.log(Level.WARNING, "Invalid page number: {0}, defaulting to 1", page);
+            page = 1;
+        }
+        List<User> users = new ArrayList<>();
+        String query = "SELECT * FROM Users WHERE 1=1";
+        if (search != null && !search.trim().isEmpty()) {
+            query += " AND username LIKE ?";
+        }
+        query += " ORDER BY user_id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+            int paramIndex = 1;
+            if (search != null && !search.trim().isEmpty()) {
+                stmt.setString(paramIndex++, "%" + search + "%");
+            }
+            stmt.setInt(paramIndex++, (page - 1) * PAGE_SIZE);
+            stmt.setInt(paramIndex, PAGE_SIZE);
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                User user = new User();
+                user.setUserId(rs.getInt("user_id"));
+                user.setUsername(rs.getString("username"));
+                user.setEmail(rs.getString("email"));
+                user.setPassword(rs.getString("password")); // Lưu ý: Trong thực tế, mật khẩu nên được mã hóa
+                user.setRole(rs.getString("role"));
+                user.setCreatedAt(rs.getTimestamp("created_at"));
+                users.add(user);
+            }
+        }
+        return users;
+    }
+
+    public int getTotalUsers(String search) throws SQLException {
+        String query = "SELECT COUNT(*) FROM Users WHERE 1=1";
+        if (search != null && !search.trim().isEmpty()) {
+            query += " AND username LIKE ?";
+        }
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+            if (search != null && !search.trim().isEmpty()) {
+                stmt.setString(1, "%" + search + "%");
+            }
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    public User getUserById(int userId) throws SQLException {
+        String query = "SELECT * FROM Users WHERE user_id = ?";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, userId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                User user = new User();
+                user.setUserId(rs.getInt("user_id"));
+                user.setUsername(rs.getString("username"));
+                user.setEmail(rs.getString("email"));
+                user.setPassword(rs.getString("password"));
+                user.setRole(rs.getString("role"));
+                user.setCreatedAt(rs.getTimestamp("created_at"));
+                return user;
+            }
+        }
+        return null;
+    }
+
+    public void addUser(User user) throws SQLException {
+        if (isUsernameExists(user.getUsername(), null)) {
+            throw new SQLException("Username already exists: " + user.getUsername());
+        }
+        if (isEmailExists(user.getEmail(), null)) {
+            throw new SQLException("Email already exists: " + user.getEmail());
+        }
+        String query = "INSERT INTO Users (username, email, password, role, created_at) VALUES (?, ?, ?, ?, GETDATE())";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, user.getUsername());
+            stmt.setString(2, user.getEmail());
+            stmt.setString(3, user.getPassword()); // Nên mã hóa mật khẩu trong thực tế
+            stmt.setString(4, user.getRole());
+            stmt.executeUpdate();
+        }
+    }
+
+    public void updateUser(User user) throws SQLException {
+        if (isUsernameExists(user.getUsername(), user.getUserId())) {
+            throw new SQLException("Username already exists: " + user.getUsername());
+        }
+        if (isEmailExists(user.getEmail(), user.getUserId())) {
+            throw new SQLException("Email already exists: " + user.getEmail());
+        }
+        String query = "UPDATE Users SET username = ?, email = ?, role = ?" + 
+                      (user.getPassword() != null ? ", password = ?" : "") + 
+                      " WHERE user_id = ?";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, user.getUsername());
+            stmt.setString(2, user.getEmail());
+            stmt.setString(3, user.getRole());
+            int paramIndex = 4;
+            if (user.getPassword() != null) {
+                stmt.setString(paramIndex++, user.getPassword());
+            }
+            stmt.setInt(paramIndex, user.getUserId());
+            stmt.executeUpdate();
+        }
+    }
+
+    public void deleteUser(int userId) throws SQLException {
+        String query = "DELETE FROM Users WHERE user_id = ?";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, userId);
+            stmt.executeUpdate();
+        }
+    }
+}

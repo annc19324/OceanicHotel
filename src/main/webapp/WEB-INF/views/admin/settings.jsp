@@ -26,7 +26,10 @@
 <body class="<%= theme.equals("dark") ? "dark-mode" : "" %>" data-theme="<%= theme %>">
     <div class="admin-container">
         <nav class="sidebar">
-            <div class="sidebar-header"><h3>Oceanic Hotel</h3></div>
+                <div class="sidebar-header">
+                    <a style="color: white; margin-bottom: 20px; font-size: 24px; font-weight: 600; letter-spacing: 0.5px;" href="<%= request.getContextPath()%>/admin/dashboard">Oceanic Hotel
+                    </a>
+                </div>
             <ul>
                 <li><a href="<%= request.getContextPath() %>/admin/dashboard"><%= language.equals("vi") ? "Tổng quan" : "Dashboard" %></a></li>
                 <li><a href="<%= request.getContextPath() %>/admin/users"><%= language.equals("vi") ? "Quản lý người dùng" : "User Management" %></a></li>
@@ -39,19 +42,7 @@
             </ul>
         </nav>
         <div class="main-content">
-            <header>
-                <div class="settings">
-                    <select id="languageSelect" onchange="changeLanguage()">
-                        <option value="en" <%= language.equals("en") ? "selected" : "" %>><%= language.equals("vi") ? "Tiếng Anh" : "English" %></option>
-                        <option value="vi" <%= language.equals("vi") ? "selected" : "" %>><%= language.equals("vi") ? "Tiếng Việt" : "Vietnamese" %></option>
-                    </select>
-                    <select id="themeSelect" onchange="changeTheme()">
-                        <option value="light" <%= theme.equals("light") ? "selected" : "" %>><%= language.equals("vi") ? "Chế độ sáng" : "Light Mode" %></option>
-                        <option value="dark" <%= theme.equals("dark") ? "selected" : "" %>><%= language.equals("vi") ? "Chế độ tối" : "Dark Mode" %></option>
-                    </select>
-                </div>
-                <h2><%= language.equals("vi") ? "Cấu hình hệ thống" : "System Settings" %></h2>
-            </header>
+
             <form action="<%= request.getContextPath() %>/admin/settings/update" method="POST">
                 <div class="form-group">
                     <label for="defaultLanguage"><%= language.equals("vi") ? "Ngôn ngữ mặc định" : "Default Language" %></label>

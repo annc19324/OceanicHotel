@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,15 +28,20 @@ public class AdminReportController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            double dailyRevenue = reportService.getDailyRevenue();
-            double monthlyRevenue = reportService.getMonthlyRevenue();
+            String reportType = request.getParameter("reportType") != null ? request.getParameter("reportType") : "daily";
+            String startDateStr = request.getParameter("startDate");
+            String endDateStr = request.getParameter("endDate");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            Date startDate = startDateStr != null && !startDateStr.isEmpty() ? sdf.parse(startDateStr) : null;
+            Date endDate = endDateStr != null && !endDateStr.isEmpty() ? sdf.parse(endDateStr) : null;
+
+            double totalRevenue = reportService.getRevenue(reportType, startDate, endDate);
             int totalRooms = reportService.getTotalRooms();
             int availableRooms = reportService.getAvailableRooms();
-            int confirmedBookings = reportService.getConfirmedBookings();
+            int confirmedBookings = reportService.getConfirmedBookings(reportType, startDate, endDate);
             double utilizationRate = totalRooms > 0 ? (double) (totalRooms - availableRooms) / totalRooms * 100 : 0;
 
-            request.setAttribute("dailyRevenue", String.format("%.2f", dailyRevenue));
-            request.setAttribute("monthlyRevenue", String.format("%.2f", monthlyRevenue));
+            request.setAttribute("totalRevenue", String.format("%.2f", totalRevenue));
             request.setAttribute("totalRooms", totalRooms);
             request.setAttribute("availableRooms", availableRooms);
             request.setAttribute("confirmedBookings", confirmedBookings);
@@ -43,6 +50,9 @@ public class AdminReportController extends HttpServlet {
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Database error in doGet", e);
             throw new ServletException("Database error", e);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error parsing dates", e);
+            throw new ServletException("Invalid date format", e);
         }
     }
 }

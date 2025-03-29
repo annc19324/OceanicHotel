@@ -10,7 +10,6 @@
         theme = "light";
         session.setAttribute("theme", theme);
     }
-    // Giả lập dữ liệu tổng quan (sẽ được thay thế bằng dữ liệu từ database)
     int checkInToday = (Integer) request.getAttribute("checkInToday") != null ? (Integer) request.getAttribute("checkInToday") : 0;
     int checkOutToday = (Integer) request.getAttribute("checkOutToday") != null ? (Integer) request.getAttribute("checkOutToday") : 0;
     int totalInHotel = (Integer) request.getAttribute("totalInHotel") != null ? (Integer) request.getAttribute("totalInHotel") : 0;
@@ -25,20 +24,15 @@
     <link rel="icon" href="<%= request.getContextPath() %>/assets/images/logo.png" type="image/x-icon">
     <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/css/main.css">
     <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/css/dashboard.css">
-    <script>
-        window.contextPath = '<%= request.getContextPath() %>';
-    </script>
-    <script src="<%= request.getContextPath() %>/assets/js/main.js" defer></script>
-    <script src="<%= request.getContextPath() %>/assets/js/theme.js" defer></script>
-    <script src="<%= request.getContextPath() %>/assets/js/language.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="<%= theme.equals("dark") ? "dark-mode" : "" %>" data-theme="<%= theme %>">
     <div class="admin-container">
-        <!-- Thanh điều hướng bên trái -->
         <nav class="sidebar">
-            <div class="sidebar-header">
-                <h3>Oceanic Hotel</h3>
-            </div>
+                <div class="sidebar-header">
+                    <a style="color: white; margin-bottom: 20px; font-size: 24px; font-weight: 600; letter-spacing: 0.5px;" href="<%= request.getContextPath()%>/admin/dashboard">Oceanic Hotel
+                    </a>
+                </div>
             <ul>
                 <li class="active"><a href="<%= request.getContextPath() %>/admin/dashboard"><%= language.equals("vi") ? "Tổng quan" : "Dashboard" %></a></li>
                 <li><a href="<%= request.getContextPath() %>/admin/users"><%= language.equals("vi") ? "Quản lý người dùng" : "User Management" %></a></li>
@@ -50,25 +44,8 @@
                 <li><a href="<%= request.getContextPath() %>/logout"><%= language.equals("vi") ? "Đăng xuất" : "Logout" %></a></li>
             </ul>
         </nav>
-
-        <!-- Nội dung chính -->
         <div class="main-content">
-            <header>
-                <div class="settings">
-                    <select id="languageSelect">
-                        <option value="en" <%= language.equals("en") ? "selected" : "" %>><%= language.equals("vi") ? "Tiếng Anh" : "English" %></option>
-                        <option value="vi" <%= language.equals("vi") ? "selected" : "" %>><%= language.equals("vi") ? "Tiếng Việt" : "Vietnamese" %></option>
-                    </select>
-                    <select id="themeSelect">
-                        <option value="light" <%= theme.equals("light") ? "selected" : "" %>><%= language.equals("vi") ? "Chế độ sáng" : "Light Mode" %></option>
-                        <option value="dark" <%= theme.equals("dark") ? "selected" : "" %>><%= language.equals("vi") ? "Chế độ tối" : "Dark Mode" %></option>
-                    </select>
-                </div>
-                <h2><%= language.equals("vi") ? "Tổng quan" : "Overview" %></h2>
-                <p><%= language.equals("vi") ? "Xin chào" : "Hello" %>, <%= ((com.mycompany.oceanichotel.models.User) session.getAttribute("user")).getUsername() %>!</p>
-            </header>
 
-            <!-- Thông tin tổng quan -->
             <div class="overview">
                 <div class="card">
                     <h4><%= language.equals("vi") ? "Check-in hôm nay" : "Today's Check-in" %></h4>
@@ -91,7 +68,54 @@
                     <p><%= occupiedRooms %></p>
                 </div>
             </div>
+            <div class="chart-container" style="margin-top: 20px; width: 500px">
+                <canvas id="roomStatusChart" width="400" height="200"></canvas>
+            </div>
+                
         </div>
     </div>
+    <script>
+        const ctx = document.getElementById('roomStatusChart').getContext('2d');
+        const roomStatusChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['<%= language.equals("vi") ? "Phòng trống" : "Available Rooms" %>', '<%= language.equals("vi") ? "Phòng đã đặt" : "Occupied Rooms" %>'],
+                datasets: [{
+                    data: [<%= availableRooms %>, <%= occupiedRooms %>],
+                    backgroundColor: ['#28a745', '#dc3545'],
+                    borderColor: ['#fff', '#fff'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    title: { display: true, text: '<%= language.equals("vi") ? "Trạng thái phòng" : "Room Status" %>' }
+                }
+            }
+        });
+
+        function changeLanguage() {
+            const language = document.getElementById('languageSelect').value;
+            fetch('<%= request.getContextPath() %>/language', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'language=' + encodeURIComponent(language)
+            }).then(() => location.reload());
+        }
+
+        function changeTheme() {
+            const theme = document.getElementById('themeSelect').value;
+            fetch('<%= request.getContextPath() %>/theme', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'theme=' + encodeURIComponent(theme)
+            }).then(() => {
+                document.body.className = theme === 'dark' ? 'dark-mode' : '';
+                document.body.setAttribute('data-theme', theme);
+            });
+        }
+    </script>
 </body>
 </html>
