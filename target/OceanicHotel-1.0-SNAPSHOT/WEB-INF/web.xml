@@ -3,26 +3,35 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
          version="6.0">
+    <display-name>OceanicHotel</display-name>
+
+    <!-- Session timeout -->
     <session-config>
-        <session-timeout>
-            30
-        </session-timeout>
+        <session-timeout>30</session-timeout>
     </session-config>
 
-    <!-- Đảm bảo DefaultServlet phục vụ file tĩnh -->
+    <!-- Default servlet for static resources -->
     <servlet-mapping>
         <servlet-name>default</servlet-name>
         <url-pattern>/assets/*</url-pattern>
     </servlet-mapping>
-    
-    <!-- Chỉ định file mặc định -->
+
+    <!-- Welcome file -->
     <welcome-file-list>
         <welcome-file>login</welcome-file>
     </welcome-file-list>
 
-    <!-- Tắt WebSocket nếu không sử dụng -->
+    <!-- Disable WebSocket if not used -->
     <context-param>
         <param-name>org.apache.tomcat.websocket.DISABLE_BUILTIN_EXTENSIONS</param-name>
         <param-value>true</param-value>
     </context-param>
+
+    <!-- JSP configuration for JSTL (optional, không cần nếu dùng Maven) -->
+    <jsp-config>
+        <taglib>
+            <taglib-uri>http://java.sun.com/jsp/jstl/core</taglib-uri>
+            <taglib-location>/WEB-INF/tlds/c.tld</taglib-location> <!-- Nếu dùng file TLD thủ công -->
+        </taglib>
+    </jsp-config>
 </web-app>

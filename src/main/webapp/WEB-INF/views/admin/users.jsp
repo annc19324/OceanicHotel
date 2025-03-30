@@ -26,58 +26,7 @@
         <link rel="stylesheet" href="<%= request.getContextPath()%>/assets/css/sidebar.css">
         <link rel="stylesheet" href="<%= request.getContextPath()%>/assets/css/table.css">
         <link rel="stylesheet" href="<%= request.getContextPath()%>/assets/css/modal.css">
-        <style>
-            .dropdown {
-                position: relative;
-                display: inline-block;
-            }
-            .dropdown-btn {
-                background: none;
-                border: none;
-                font-size: 20px;
-                cursor: pointer;
-                padding: 0 10px;
-                color: #333;
-            }
-            .dropdown-content {
-                display: none;
-                position: absolute;
-                right: 0;
-                background-color: #fff;
-                min-width: 160px;
-                box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-                z-index: 1;
-                border-radius: 5px;
-                border: 1px solid #ddd;
-            }
-            .dropdown-content a {
-                color: #333;
-                padding: 8px 16px;
-                text-decoration: none;
-                display: block;
-                border-bottom: 1px solid #ddd;
-            }
-            .dropdown-content a:last-child {
-                border-bottom: none;
-            }
-            .dropdown-content a:hover {
-                background-color: #007bff;
-                color: #fff;
-            }
-            .dark-mode .dropdown-btn {
-                color: #fff;
-            }
-            .dark-mode .dropdown-content {
-                background-color: #555;
-                border-color: #666;
-            }
-            .dark-mode .dropdown-content a {
-                color: #fff;
-            }
-            .dark-mode .dropdown-content a:hover {
-                background-color: #0056b3;
-            }
-        </style>
+
     </head>
     <body class="<%= theme.equals("dark") ? "dark-mode" : ""%>" data-theme="<%= theme%>">
         <div class="admin-container">

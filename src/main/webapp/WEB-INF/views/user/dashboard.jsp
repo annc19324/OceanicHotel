@@ -1,8 +1,9 @@
-<%@page import="com.mycompany.oceanichotel.models.RoomTypeImage"%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ page import="java.util.List" %>
 <%@ page import="com.mycompany.oceanichotel.models.User" %>
 <%@ page import="com.mycompany.oceanichotel.models.RoomType" %>
+<%@ page import="com.mycompany.oceanichotel.models.RoomTypeImage" %>
 <%
     String language = (String) session.getAttribute("language");
     if (language == null) {
@@ -16,6 +17,7 @@
     }
     User currentUser = (User) session.getAttribute("user");
     List<RoomType> roomTypes = (List<RoomType>) request.getAttribute("roomTypes");
+    String searchQuery = request.getParameter("search");
 %>
 <!DOCTYPE html>
 <html lang="<%= language %>">
@@ -24,236 +26,215 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= language.equals("vi") ? "Trang chủ - Khách sạn Oceanic" : "Home - Oceanic Hotel" %></title>
     <link rel="icon" href="<%= request.getContextPath() %>/assets/images/logo.png" type="image/x-icon">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            margin: 0;
-            padding: 0;
-            background: #f4f7f9;
-            color: #333;
             transition: background 0.3s ease, color 0.3s ease;
-        }
-        .container {
-            max-width: 1300px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            background: url('<%= request.getContextPath() %>/assets/images/hotel-bg.jpg') no-repeat center;
-            background-size: cover;
-            height: 400px;
-            color: white;
-            text-align: center;
-            padding: 100px 20px;
-            position: relative;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            margin-bottom: 40px;
-        }
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 15px;
-        }
-        .header-content {
-            position: relative;
-            z-index: 1;
-        }
-        .header h1 {
-            font-size: 48px;
-            margin: 0;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        }
-        .header p {
-            font-size: 18px;
-            margin: 10px 0 0;
-        }
-        .nav-bar {
-            display: flex;
-            justify-content: flex-end;
-            padding: 10px 0;
-            background: rgba(255, 255, 255, 0.9);
-            position: absolute;
-            top: 0;
-            width: 100%;
-        }
-        .nav-bar a {
-            color: #3498db;
-            text-decoration: none;
-            margin: 0 20px;
-            font-weight: 400;
-            transition: color 0.3s ease;
-        }
-        .nav-bar a:hover {
-            color: #2980b9;
-        }
-        .room-types {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-        .room-type-card {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            cursor: pointer;
-        }
-        .room-type-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-        }
-        .room-type-card img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-        }
-        .room-type-card-content {
-            padding: 15px;
-        }
-        .room-type-card h3 {
-            margin: 0 0 10px;
-            font-size: 20px;
-            color: #2c3e50;
-        }
-        .room-type-card p {
-            margin: 0;
-            color: #7f8c8d;
-            font-size: 14px;
-        }
-        .offers {
-            background: #fff;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-        .offers h2 {
-            font-size: 24px;
-            margin: 0 0 20px;
-            color: #2c3e50;
-        }
-        .offer-item {
-            margin-bottom: 15px;
-            padding: 15px;
-            background: #f9f9f9;
-            border-radius: 10px;
-        }
-        .offer-item h4 {
-            margin: 0 0 5px;
-            color: #3498db;
+            overflow-x: hidden;
         }
         .dark-mode {
-            background: #2c3e50;
-            color: #ecf0f1;
+            background: #1a202c;
+            color: #e2e8f0;
         }
-        .dark-mode .header {
-            background: url('<%= request.getContextPath() %>/assets/images/hotel-bg-dark.jpg') no-repeat center;
+        .header-bg {
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url('<%= request.getContextPath() %>/assets/images/hotel-bg.jpg') no-repeat center;
             background-size: cover;
         }
-        .dark-mode .room-type-card, .dark-mode .offers {
-            background: #34495e;
+        .room-type-card img {
+            height: 220px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
         }
-        .dark-mode .room-type-card h3, .dark-mode .offers h2 {
-            color: #ecf0f1;
+        .room-type-card:hover img {
+            transform: scale(1.05);
         }
-        .dark-mode .room-type-card p, .dark-mode .offer-item {
-            color: #bdc3c7;
+        .fallback-image {
+            background: #e2e8f0;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 220px;
+            font-size: 16px;
         }
-        @media (max-width: 600px) {
-            .room-types {
-                grid-template-columns: 1fr;
+        .dark-mode .fallback-image {
+            background: #2d3748;
+            color: #e2e8f0;
+        }
+        .btn {
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .language-toggle, .theme-toggle {
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        .language-toggle:hover, .theme-toggle:hover {
+            color: #60a5fa;
+        }
+        .offers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .header-bg {
+                height: 70vh;
             }
-            .header h1 {
-                font-size: 32px;
+            .room-type-card img, .fallback-image {
+                height: 180px;
             }
         }
     </style>
 </head>
 <body class="<%= theme.equals("dark") ? "dark-mode" : "" %>">
-    <div class="container">
-        <div class="header">
-            <div class="nav-bar">
-                <% if (currentUser != null) { %>
-                <a href="<%= request.getContextPath() %>/user/profile"><%= language.equals("vi") ? "Hồ sơ" : "Profile" %></a>
-                <a href="<%= request.getContextPath() %>/user/bookings"><%= language.equals("vi") ? "Đặt phòng" : "Bookings" %></a>
-                <a href="<%= request.getContextPath() %>/logout"><%= language.equals("vi") ? "Đăng xuất" : "Logout" %></a>
-                <% } else { %>
-                <a href="<%= request.getContextPath() %>/login"><%= language.equals("vi") ? "Đăng nhập" : "Login" %></a>
-                <a href="<%= request.getContextPath() %>/register"><%= language.equals("vi") ? "Đăng ký" : "Register" %></a>
-                <% } %>
+    <div class="relative min-h-screen">
+        <!-- Header -->
+        <header class="header-bg h-96 md:h-[70vh] relative rounded-b-3xl shadow-2xl">
+            <div class="absolute inset-0 bg-black bg-opacity-40 rounded-b-3xl"></div>
+            <nav class="absolute top-0 w-full flex justify-between items-center px-6 py-4 z-20">
+                <div class="flex items-center space-x-4">
+                    <img src="<%= request.getContextPath() %>/assets/images/width_800.jpg" alt="Logo" class="h-10">
+                    <span class="text-white font-bold text-xl hidden md:block">Oceanic Hotel</span>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <c:choose>
+                        <c:when test="${not empty sessionScope.user}">
+                            <a href="<%= request.getContextPath() %>/user/profile" class="text-white hover:text-blue-300 transition"><%= language.equals("vi") ? "Hồ sơ" : "Profile" %></a>
+                            <a href="<%= request.getContextPath() %>/user/bookings" class="text-white hover:text-blue-300 transition"><%= language.equals("vi") ? "Đặt phòng" : "Bookings" %></a>
+                            <a href="<%= request.getContextPath() %>/logout" class="text-white hover:text-blue-300 transition"><%= language.equals("vi") ? "Đăng xuất" : "Logout" %></a>
+                        </c:when>
+                        <c:otherwise>
+                            <a href="<%= request.getContextPath() %>/login" class="text-white hover:text-blue-300 transition"><%= language.equals("vi") ? "Đăng nhập" : "Login" %></a>
+                            <a href="<%= request.getContextPath() %>/register" class="text-white hover:text-blue-300 transition"><%= language.equals("vi") ? "Đăng ký" : "Register" %></a>
+                        </c:otherwise>
+                    </c:choose>
+                    <span class="language-toggle text-white" onclick="changeLanguage('<%= language.equals("vi") ? "en" : "vi" %>')">
+                        <i class="fas fa-globe mr-1"></i><%= language.equals("vi") ? "EN" : "VI" %>
+                    </span>
+                    <span class="theme-toggle text-white" onclick="changeTheme('<%= theme.equals("dark") ? "light" : "dark" %>')">
+                        <i class="fas <%= theme.equals("dark") ? "fa-sun" : "fa-moon" %>"></i>
+                    </span>
+                </div>
+            </nav>
+            <div class="relative z-10 flex flex-col items-center justify-center h-full text-center text-white px-4">
+                <h1 class="text-4xl md:text-6xl font-bold mb-4 animate-fade-in-down"><%= language.equals("vi") ? "Chào mừng đến với Khách sạn Oceanic" : "Welcome to Oceanic Hotel" %></h1>
+                <p class="text-lg md:text-xl max-w-2xl"><%= language.equals("vi") ? "Trải nghiệm nghỉ dưỡng đẳng cấp bên bờ biển với dịch vụ hoàn hảo và không gian sang trọng." : "Experience luxury by the sea with impeccable service and elegant surroundings." %></p>
             </div>
-            <div class="header-content">
-                <h1><%= language.equals("vi") ? "Chào mừng đến với Khách sạn Oceanic" : "Welcome to Oceanic Hotel" %></h1>
-                <p><%= language.equals("vi") ? "Trải nghiệm nghỉ dưỡng đẳng cấp bên bờ biển" : "Experience luxury by the sea" %></p>
-            </div>
+        </header>
+
+        <!-- Search Bar -->
+        <div class="container mx-auto px-4 mt-10">
+            <form action="<%= request.getContextPath() %>/user/dashboard" method="GET" class="w-full max-w-lg mx-auto">
+                <div class="relative">
+                    <input type="text" name="search" value="<%= searchQuery != null ? searchQuery : "" %>" 
+                           placeholder="<%= language.equals("vi") ? "Tìm kiếm loại phòng..." : "Search room types..." %>" 
+                           class="w-full p-4 pl-12 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+            </form>
         </div>
 
-        <section class="room-types">
-            <% if (roomTypes != null && !roomTypes.isEmpty()) {
-                for (RoomType roomType : roomTypes) {
-                    RoomTypeImage primaryImage = roomType.getPrimaryImage();
-                    String imageUrl = primaryImage != null ? request.getContextPath() + "/assets/images/room-types/" + primaryImage.getImageUrl() : request.getContextPath() + "/assets/images/default-room.jpg";
-            %>
-            <div class="room-type-card" onclick="window.location.href='<%= request.getContextPath() %>/rooms?typeId=<%= roomType.getTypeId() %>'">
-                <img src="<%= imageUrl %>" alt="<%= roomType.getTypeName() %>">
-                <div class="room-type-card-content">
-                    <h3><%= roomType.getTypeName() %></h3>
-                    <p><%= language.equals("vi") ? "Tối đa " + roomType.getMaxAdults() + " người lớn, " + roomType.getMaxChildren() + " trẻ em" 
-                        : "Max " + roomType.getMaxAdults() + " adults, " + roomType.getMaxChildren() + " children" %></p>
-                    <p><%= language.equals("vi") ? "Từ " : "From " %> <%= String.format("%.2f", roomType.getDefaultPrice()) %> VND/<%= language.equals("vi") ? "đêm" : "night" %></p>
-                </div>
+        <!-- Room Types -->
+        <section class="container mx-auto px-4 mt-12">
+            <h2 class="text-3xl font-semibold text-gray-900 dark:text-white text-center mb-8"><%= language.equals("vi") ? "Khám phá các loại phòng" : "Explore Room Types" %></h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <c:choose>
+                    <c:when test="${not empty roomTypes}">
+                        <c:forEach var="roomType" items="${roomTypes}">
+                            <div class="room-type-card bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transform hover:shadow-2xl transition-all duration-300">
+                                <c:choose>
+                                    <c:when test="${not empty roomType.primaryImage && not empty roomType.primaryImage.imageUrl}">
+                                        <img src="${pageContext.request.contextPath}/assets/images/${roomType.primaryImage.imageUrl}" alt="${roomType.typeName}" class="w-full">
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="fallback-image w-full"><%= language.equals("vi") ? "Ảnh không khả dụng" : "Image unavailable" %></div>
+                                    </c:otherwise>
+                                </c:choose>
+                                <div class="p-6">
+                                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">${roomType.typeName}</h3>
+                                    <p class="text-gray-600 dark:text-gray-300 text-sm"><%= language.equals("vi") ? "Tối đa " + ((RoomType)pageContext.getAttribute("roomType")).getMaxAdults() + " người lớn, " + ((RoomType)pageContext.getAttribute("roomType")).getMaxChildren() + " trẻ em" 
+                                        : "Max " + ((RoomType)pageContext.getAttribute("roomType")).getMaxAdults() + " adults, " + ((RoomType)pageContext.getAttribute("roomType")).getMaxChildren() + " children" %></p>
+                                    <p class="text-gray-600 dark:text-gray-300 mt-1"><%= language.equals("vi") ? "Từ " : "From " %> <span class="font-medium">${roomType.defaultPrice} VND</span>/<%= language.equals("vi") ? "đêm" : "night" %></p>
+                                    <a href="${pageContext.request.contextPath}/user/rooms?typeId=${roomType.typeId}" 
+                                       class="mt-4 inline-block px-4 py-2 bg-blue-500 text-white rounded-lg btn hover:bg-blue-600"><%= language.equals("vi") ? "Đặt phòng" : "Booking" %></a>
+                                </div>
+                            </div>
+                        </c:forEach>
+                    </c:when>
+                    <c:otherwise>
+                        <p class="text-center col-span-full text-gray-600 dark:text-gray-300 text-lg"><%= language.equals("vi") ? "Không có loại phòng nào để hiển thị." : "No room types available." %></p>
+                    </c:otherwise>
+                </c:choose>
             </div>
-            <% }
-            } else { %>
-            <p><%= language.equals("vi") ? "Không có loại phòng nào để hiển thị." : "No room types available." %></p>
-            <% } %>
         </section>
 
-        <section class="offers">
-            <h2><%= language.equals("vi") ? "Ưu đãi đặc biệt" : "Special Offers" %></h2>
-            <div class="offer-item">
-                <h4><%= language.equals("vi") ? "Giảm 20% cho phòng Suite" : "20% Off Suite Rooms" %></h4>
-                <p><%= language.equals("vi") ? "Áp dụng từ 01/04 - 10/04/2025" : "Valid from 01/04 - 10/04/2025" %></p>
-            </div>
-            <div class="offer-item">
-                <h4><%= language.equals("vi") ? "Ở 3 đêm, tặng 1 đêm miễn phí" : "Stay 3 Nights, Get 1 Free" %></h4>
-                <p><%= language.equals("vi") ? "Dành cho tất cả các loại phòng" : "Applicable to all room types" %></p>
+        <!-- Special Offers -->
+        <section class="container mx-auto px-4 mt-16 mb-12">
+            <h2 class="text-3xl font-semibold text-gray-900 dark:text-white text-center mb-8"><%= language.equals("vi") ? "Ưu đãi đặc biệt" : "Special Offers" %></h2>
+            <div class="offers-grid">
+                <div class="p-6 bg-gray-100 dark:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition">
+                    <h4 class="text-lg font-medium text-blue-600 dark:text-blue-400 mb-2"><%= language.equals("vi") ? "Giảm 20% cho phòng Suite" : "20% Off Suite Rooms" %></h4>
+                    <p class="text-gray-600 dark:text-gray-300 text-sm"><%= language.equals("vi") ? "Áp dụng từ 01/04 - 10/04/2025" : "Valid from 01/04 - 10/04/2025" %></p>
+                    <a href="#" class="mt-3 inline-block text-blue-500 hover:text-blue-700 text-sm"><%= language.equals("vi") ? "Tìm hiểu thêm" : "Learn More" %></a>
+                </div>
+                <div class="p-6 bg-gray-100 dark:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition">
+                    <h4 class="text-lg font-medium text-blue-600 dark:text-blue-400 mb-2"><%= language.equals("vi") ? "Ở 3 đêm, tặng 1 đêm miễn phí" : "Stay 3 Nights, Get 1 Free" %></h4>
+                    <p class="text-gray-600 dark:text-gray-300 text-sm"><%= language.equals("vi") ? "Dành cho tất cả các loại phòng" : "Applicable to all room types" %></p>
+                    <a href="#" class="mt-3 inline-block text-blue-500 hover:text-blue-700 text-sm"><%= language.equals("vi") ? "Tìm hiểu thêm" : "Learn More" %></a>
+                </div>
             </div>
         </section>
+
+        <!-- Footer -->
+        <footer class="bg-gray-900 dark:bg-gray-800 text-white py-6">
+            <div class="container mx-auto px-4 text-center">
+                <p>© 2025 Oceanic Hotel. <%= language.equals("vi") ? "Mọi quyền được bảo lưu." : "All rights reserved." %></p>
+                <div class="mt-2">
+                    <a href="#" class="text-gray-400 hover:text-white mx-2"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white mx-2"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white mx-2"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+        </footer>
     </div>
 
     <script>
-        function changeLanguage() {
-            const language = document.getElementById('languageSelect')?.value;
-            if (language) {
-                fetch('<%= request.getContextPath() %>/language', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: 'language=' + encodeURIComponent(language)
-                }).then(() => location.reload());
-            }
+        function changeLanguage(lang) {
+            fetch('<%= request.getContextPath() %>/language', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'language=' + encodeURIComponent(lang)
+            }).then(() => location.reload());
         }
 
-        function changeTheme() {
-            const theme = document.getElementById('themeSelect')?.value;
-            if (theme) {
-                fetch('<%= request.getContextPath() %>/theme', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: 'theme=' + encodeURIComponent(theme)
-                }).then(() => {
-                    document.body.className = theme === 'dark' ? 'dark-mode' : '';
-                });
-            }
+        function changeTheme(theme) {
+            fetch('<%= request.getContextPath() %>/theme', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'theme=' + encodeURIComponent(theme)
+            }).then(() => {
+                document.body.classList.toggle('dark-mode', theme === 'dark');
+            });
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const elements = document.querySelectorAll('.animate-fade-in-down');
+            elements.forEach(el => {
+                el.style.opacity = 0;
+                el.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    el.style.opacity = 1;
+                    el.style.transform = 'translateY(0)';
+                }, 100);
+            });
+        });
     </script>
 </body>
 </html>

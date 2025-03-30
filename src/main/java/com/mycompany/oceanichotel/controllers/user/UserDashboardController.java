@@ -15,10 +15,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
-/**
- * @author annc1
- */
 @WebServlet("/user/dashboard")
 public class UserDashboardController extends HttpServlet {
 
@@ -38,8 +36,14 @@ public class UserDashboardController extends HttpServlet {
             User user = (User) session.getAttribute("user");
             if ("user".equals(user.getRole())) {
                 request.setAttribute("username", user.getUsername());
+                String searchQuery = request.getParameter("search");
                 try {
                     List<RoomType> roomTypes = roomTypeService.getAllRoomTypes();
+                    if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+                        roomTypes = roomTypes.stream()
+                                .filter(rt -> rt.getTypeName().toLowerCase().contains(searchQuery.toLowerCase()))
+                                .collect(Collectors.toList());
+                    }
                     LOGGER.log(Level.INFO, "Retrieved {0} room types from database.", roomTypes.size());
                     if (roomTypes.isEmpty()) {
                         LOGGER.warning("No room types found in the database.");

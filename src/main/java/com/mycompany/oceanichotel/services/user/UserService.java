@@ -65,4 +65,15 @@ public class UserService {
             return null; // Login failed
         }
     }
+    public void updateUser(User user) throws SQLException {
+        String query = "UPDATE Users SET username = ?, email = ?, avatar = ? WHERE user_id = ?";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, user.getUsername());
+            stmt.setString(2, user.getEmail());
+            stmt.setString(3, user.getAvatar());
+            stmt.setInt(4, user.getUserId());
+            stmt.executeUpdate();
+        }
+    }
 }

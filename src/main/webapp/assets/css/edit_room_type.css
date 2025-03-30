@@ -1,0 +1,157 @@
+/* assets/css/edit_room_type.css */
+.image-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.image-item {
+    position: relative;
+    text-align: center;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    overflow: hidden;
+    width: 150px;
+}
+
+.image-item.primary {
+    border-color: #28a745;
+}
+
+.image-item img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+}
+
+.image-status {
+    font-size: 12px;
+    color: #4a5568;
+    display: block;
+    margin-top: 5px;
+}
+
+.dark-mode .image-status {
+    color: #e2e8f0;
+}
+
+.image-actions {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.image-actions button {
+    padding: 5px 0;
+    font-size: 12px;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    width: 70px;
+    text-align: center;
+}
+
+.image-actions .delete-btn {
+    background-color: #dc3545;
+}
+
+.image-actions .primary-btn {
+    background-color: #28a745;
+}
+
+.preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.preview-item {
+    position: relative;
+}
+
+.preview-container img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.remove-preview-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-preview-btn:hover {
+    background-color: #c82333;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .image-item {
+        width: 120px;
+    }
+
+    .image-item img {
+        height: 100px;
+    }
+
+    .image-actions button {
+        width: 60px;
+        font-size: 10px;
+    }
+
+    .preview-container img {
+        width: 80px;
+        height: 80px;
+    }
+
+    .remove-preview-btn {
+        width: 18px;
+        height: 18px;
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .image-item {
+        width: 100%;
+        max-width: 150px;
+    }
+
+    .image-actions {
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .image-actions button {
+        width: 100%;
+        padding: 5px;
+    }
+
+    .preview-container img {
+        width: 70px;
+        height: 70px;
+    }
+
+    .remove-preview-btn {
+        width: 16px;
+        height: 16px;
+        font-size: 9px;
+    }
+}

@@ -21,48 +21,7 @@
         <link rel="stylesheet" href="<%= request.getContextPath()%>/assets/css/sidebar.css">
         <link rel="stylesheet" href="<%= request.getContextPath()%>/assets/css/table.css">
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <style>
-            .report-section {
-                margin: 20px 0;
-                padding: 15px;
-                border: 1px solid #ddd;
-                border-radius: 5px;
-                background: #fff;
-            }
-            .report-section h3 {
-                margin-bottom: 10px;
-                color: #333;
-            }
-            .filter-section {
-                margin-bottom: 20px;
-            }
-            .filter-section label {
-                margin-right: 10px;
-            }
-            .filter-section input, .filter-section select {
-                padding: 5px;
-                margin-right: 10px;
-            }
-            .chart-container {
-                width: 100%;
-                max-width: 500px;
-                height: 300px;
-                margin: 20px auto;
-            }
-            .dark-mode .report-section {
-                background: #444;
-                border-color: #666;
-                color: #fff;
-            }
-            .dark-mode .report-section h3 {
-                color: #fff;
-            }
-            .dark-mode .filter-section input, .dark-mode .filter-section select {
-                background: #555;
-                color: #fff;
-                border: 1px solid #777;
-            }
-        </style>
+
     </head>
     <body class="<%= theme.equals("dark") ? "dark-mode" : ""%>" data-theme="<%= theme%>">
         <div class="admin-container">
@@ -74,7 +33,7 @@
                 <ul>
                     <li><a href="<%= request.getContextPath()%>/admin/dashboard"><%= language.equals("vi") ? "Tổng quan" : "Dashboard"%></a></li>
                     <li><a href="<%= request.getContextPath()%>/admin/users"><%= language.equals("vi") ? "Quản lý người dùng" : "User Management"%></a></li>
-                    <li class="active"><a href="<%= request.getContextPath()%>/admin/room-types"><%= language.equals("vi") ? "Quản lý loại phòng" : "Room Type Management"%></a></li>
+                    <li><a href="<%= request.getContextPath()%>/admin/room-types"><%= language.equals("vi") ? "Quản lý loại phòng" : "Room Type Management"%></a></li>
 
                     <li><a href="<%= request.getContextPath()%>/admin/rooms"><%= language.equals("vi") ? "Quản lý phòng" : "Room Management"%></a></li>
                     <li><a href="<%= request.getContextPath()%>/admin/bookings"><%= language.equals("vi") ? "Quản lý đặt phòng" : "Booking Management"%></a></li>

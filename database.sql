@@ -182,4 +182,12 @@ SELECT type_id, 'suite.png', 1 FROM Room_Types WHERE type_name = 'Suite';
 
 
 
+SELECT type_id, COUNT(*) as primary_count
+FROM Room_Type_Images
+WHERE is_primary = 1
+GROUP BY type_id
+HAVING COUNT(*) > 1;
+
+SELECT * FROM Room_Type_Images WHERE type_id = 1; -- Thay type_id bằng giá trị thực tế
+
 

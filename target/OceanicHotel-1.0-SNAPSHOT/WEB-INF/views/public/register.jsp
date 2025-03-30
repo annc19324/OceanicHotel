@@ -15,15 +15,18 @@
 <html lang="<%= language %>">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= language.equals("vi") ? "Đăng ký - Khách sạn Oceanic" : "Register - Oceanic Hotel" %></title>
     <link rel="icon" href="<%= request.getContextPath() %>/assets/images/logo.png" type="image/x-icon">
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/css/main.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/css/auth.css">
     <script>
         window.contextPath = '<%= request.getContextPath() %>';
     </script>
-    <script type="module" src="<%= request.getContextPath() %>/assets/js/main.js" defer></script>
-    
-    
+    <script type="module" src="<%= request.getContextPath() %>/assets/js/language.js" defer></script>
+    <script type="module" src="<%= request.getContextPath() %>/assets/js/theme.js" defer></script>
 </head>
 <body class="<%= theme.equals("dark") ? "dark-mode" : "" %>" data-theme="<%= theme %>">
     <div class="settings">
@@ -36,22 +39,22 @@
             <option value="dark" <%= theme.equals("dark") ? "selected" : "" %>><%= language.equals("vi") ? "Chế độ tối" : "Dark Mode" %></option>
         </select>
     </div>
-    <div class="container">
+    <div class="container animate-fade-in">
+        <!--<img src="<%= request.getContextPath() %>/assets/images/width_800.jpg" alt="Oceanic Hotel Logo" class="logo">-->
         <h2><%= language.equals("vi") ? "Đăng ký" : "Register" %></h2>
         <form action="<%= request.getContextPath() %>/register" method="post">
             <label for="username"><%= language.equals("vi") ? "Tên người dùng:" : "Username:" %></label>
-            <input type="text" id="username" name="username" required>
+            <input type="text" id="username" name="username" required class="input-field">
             <label for="email"><%= language.equals("vi") ? "Email:" : "Email:" %></label>
-            <input type="email" id="email" name="email" required>
+            <input type="email" id="email" name="email" required class="input-field">
             <label for="password"><%= language.equals("vi") ? "Mật khẩu:" : "Password:" %></label>
-            <input type="password" id="password" name="password" required>
-            <button type="submit"><%= language.equals("vi") ? "Đăng ký" : "Register" %></button>
+            <input type="password" id="password" name="password" required class="input-field">
+            <button type="submit" class="submit-btn"><%= language.equals("vi") ? "Đăng ký" : "Register" %></button>
         </form>
-        <div id="error-message" style="display: none; color: red;"></div>
         <% if (request.getAttribute("error") != null) { %>
-            <p style="color: red;"><%= request.getAttribute("error") %></p>
+            <p class="error-message"><%= request.getAttribute("error") %></p>
         <% } %>
-        <p><%= language.equals("vi") ? "Đã có tài khoản?" : "Already have an account?" %> <a href="<%= request.getContextPath() %>/login"><%= language.equals("vi") ? "Đăng nhập tại đây" : "Login here" %></a></p>
+        <p class="link-text"><%= language.equals("vi") ? "Đã có tài khoản?" : "Already have an account?" %> <a href="<%= request.getContextPath() %>/login"><%= language.equals("vi") ? "Đăng nhập tại đây" : "Login here" %></a></p>
     </div>
 </body>
 </html>
