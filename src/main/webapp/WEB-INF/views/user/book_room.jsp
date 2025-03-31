@@ -48,7 +48,7 @@
 <body class="<%= theme.equals("dark") ? "dark-mode" : "" %>">
     <div class="relative min-h-screen">
         <!-- Header -->
-        <header class="header-bg h-96 md:h-[70vh] relative rounded-b-3xl shadow-2xl">
+        <header class="header-bg h-80 md:h-[70vh] relative rounded-b-3xl shadow-2xl">
             <div class="absolute inset-0 bg-black bg-opacity-40 rounded-b-3xl"></div>
             <nav class="absolute top-0 w-full flex justify-between items-center px-6 py-4 z-20">
                 <div class="flex items-center space-x-4">
@@ -82,7 +82,7 @@
         </header>
 
         <!-- Main Content -->
-        <main class="container mx-auto px-4 mt-12">
+        <main class="container mx-auto px-4 mt-12" style="background-image: url('../assets/images/Home-BG.png') ">
             <c:choose>
                 <c:when test="${not empty success}">
                     <div class="text-center">
@@ -94,7 +94,7 @@
                     </div>
                 </c:when>
                 <c:otherwise>
-                    <section class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-lg mx-auto">
+                    <section class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-lg mx-auto " style="opacity: 0.9; position: relative; top: -150px">
                         <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
                             <%= language.equals("vi") ? "Phòng" : "Room" %> ${room.roomNumber} - ${room.roomType.typeName}
                         </h2>

@@ -14,15 +14,16 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class UserBookingService {
+
     public List<Booking> getUserBookings(int userId) throws SQLException {
         List<Booking> bookings = new ArrayList<>();
-        String query = "SELECT b.*, r.room_number, rt.type_name " +
-                      "FROM Bookings b " +
-                      "JOIN Rooms r ON b.room_id = r.room_id " +
-                      "JOIN Room_Types rt ON r.type_id = rt.type_id " +
-                      "WHERE b.user_id = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        String query = "SELECT b.booking_id, b.user_id, b.room_id, b.check_in_date, b.check_out_date, "
+                + "b.total_price, b.status, b.num_adults, b.num_children, r.room_number, rt.type_name "
+                + "FROM Bookings b "
+                + "JOIN Rooms r ON b.room_id = r.room_id "
+                + "JOIN Room_Types rt ON r.type_id = rt.type_id "
+                + "WHERE b.user_id = ?";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, userId);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -32,8 +33,8 @@ public class UserBookingService {
                 booking.setRoomId(rs.getInt("room_id"));
                 booking.setCheckInDate(rs.getDate("check_in_date"));
                 booking.setCheckOutDate(rs.getDate("check_out_date"));
-                booking.setAdults(rs.getInt("adults"));
-                booking.setChildren(rs.getInt("children"));
+                booking.setAdults(rs.getInt("num_adults"));    // Sửa thành num_adults
+                booking.setChildren(rs.getInt("num_children")); // Sửa thành num_children
                 booking.setTotalPrice(rs.getDouble("total_price"));
                 booking.setStatus(rs.getString("status"));
 
@@ -42,7 +43,7 @@ public class UserBookingService {
                 int nights = (int) TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
                 booking.setNights(nights);
 
-                // Kiểm tra xem có thể hủy hay không (ví dụ: trước 24 giờ so với check-in)
+                // Kiểm tra xem có thể hủy không
                 long hoursUntilCheckIn = TimeUnit.HOURS.convert(booking.getCheckInDate().getTime() - new Date().getTime(), TimeUnit.MILLISECONDS);
                 booking.setCanCancel(hoursUntilCheckIn > 24);
 
@@ -61,10 +62,10 @@ public class UserBookingService {
         return bookings;
     }
 
+    // Giữ nguyên các phương thức khác
     public double calculateTotalPrice(int roomId, String checkIn, String checkOut) throws SQLException {
         String query = "SELECT price_per_night FROM Rooms WHERE room_id = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, roomId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -80,15 +81,15 @@ public class UserBookingService {
     }
 
     public void saveBooking(Booking booking) throws SQLException {
-        String query = "INSERT INTO Bookings (user_id, room_id, check_in_date, check_out_date, adults, children, total_price, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        String query = "INSERT INTO Bookings (user_id, room_id, check_in_date, check_out_date, num_adults, num_children, total_price, status) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, booking.getUserId());
             stmt.setInt(2, booking.getRoomId());
             stmt.setDate(3, new java.sql.Date(booking.getCheckInDate().getTime()));
             stmt.setDate(4, new java.sql.Date(booking.getCheckOutDate().getTime()));
-            stmt.setInt(5, booking.getAdults());
-            stmt.setInt(6, booking.getChildren());
+            stmt.setInt(5, booking.getAdults());    // Lưu num_adults
+            stmt.setInt(6, booking.getChildren());  // Lưu num_children
             stmt.setDouble(7, booking.getTotalPrice());
             stmt.setString(8, booking.getStatus());
             stmt.executeUpdate();

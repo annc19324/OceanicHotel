@@ -95,7 +95,8 @@
 <body class="<%= theme.equals("dark") ? "dark-mode" : "" %>">
     <div class="relative min-h-screen">
         <!-- Header -->
-        <header class="header-bg h-96 md:h-[70vh] relative rounded-b-3xl shadow-2xl">
+        <!--h96-->
+        <header class="header-bg h-80 md:h-[70vh] relative rounded-b-3xl shadow-2xl">
             <div class="absolute inset-0 bg-black bg-opacity-40 rounded-b-3xl"></div>
             <nav class="absolute top-0 w-full flex justify-between items-center px-6 py-4 z-20">
                 <div class="flex items-center space-x-4">

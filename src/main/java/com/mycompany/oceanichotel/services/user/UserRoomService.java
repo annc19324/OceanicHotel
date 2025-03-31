@@ -13,7 +13,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
@@ -129,10 +131,9 @@ public class UserRoomService {
 
         try {
             conn = DatabaseUtil.getConnection();
-            conn.setAutoCommit(false); // Bắt đầu transaction
+            conn.setAutoCommit(false);
             LOGGER.info("Starting transaction for booking roomId=" + booking.getRoomId());
 
-            // 1. Lưu booking và lấy booking_id
             String insertBookingQuery = "INSERT INTO Bookings (user_id, room_id, check_in_date, check_out_date, total_price, status, num_adults, num_children) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             stmtBooking = conn.prepareStatement(insertBookingQuery, Statement.RETURN_GENERATED_KEYS);
@@ -142,15 +143,11 @@ public class UserRoomService {
             stmtBooking.setDate(4, new java.sql.Date(booking.getCheckOutDate().getTime()));
             stmtBooking.setDouble(5, booking.getTotalPrice());
             stmtBooking.setString(6, booking.getStatus());
-            stmtBooking.setInt(7, booking.getAdults());
-            stmtBooking.setInt(8, booking.getChildren());
+            stmtBooking.setInt(7, booking.getAdults());    // Sửa thành num_adults
+            stmtBooking.setInt(8, booking.getChildren());  // Sửa thành num_children
             int rowsAffected = stmtBooking.executeUpdate();
             LOGGER.info("Inserted into Bookings, rows affected: " + rowsAffected);
-            if (rowsAffected != 1) {
-                throw new SQLException("Failed to insert into Bookings, rows affected: " + rowsAffected);
-            }
 
-            // Lấy booking_id vừa tạo
             ResultSet generatedKeys = stmtBooking.getGeneratedKeys();
             int bookingId;
             if (generatedKeys.next()) {
@@ -161,34 +158,24 @@ public class UserRoomService {
                 throw new SQLException("Không thể lấy booking_id sau khi tạo booking.");
             }
 
-            // 2. Cập nhật trạng thái phòng
             String updateRoomQuery = "UPDATE Rooms SET is_available = 0 WHERE room_id = ?";
             stmtRoom = conn.prepareStatement(updateRoomQuery);
             stmtRoom.setInt(1, booking.getRoomId());
             rowsAffected = stmtRoom.executeUpdate();
             LOGGER.info("Updated Rooms availability, rows affected: " + rowsAffected);
-            if (rowsAffected != 1) {
-                throw new SQLException("Failed to update room availability for roomId=" + booking.getRoomId());
-            }
 
-            // 3. Lưu vào Booking_History
             String insertHistoryQuery = "INSERT INTO Booking_History (booking_id, changed_by, old_status, new_status) "
                     + "VALUES (?, ?, ?, ?)";
             stmtHistory = conn.prepareStatement(insertHistoryQuery);
             stmtHistory.setInt(1, bookingId);
             stmtHistory.setInt(2, booking.getUserId());
-            stmtHistory.setString(3, null); // Trạng thái cũ là null
-            stmtHistory.setString(4, booking.getStatus()); // Trạng thái mới (Pending)
+            stmtHistory.setString(3, null);
+            stmtHistory.setString(4, booking.getStatus());
             rowsAffected = stmtHistory.executeUpdate();
             LOGGER.info("Inserted into Booking_History, rows affected: " + rowsAffected);
-            if (rowsAffected != 1) {
-                throw new SQLException("Failed to insert into Booking_History for bookingId=" + bookingId);
-            }
 
-            // Commit transaction
             conn.commit();
             LOGGER.info("Transaction committed successfully for roomId=" + booking.getRoomId() + ", bookingId=" + bookingId);
-
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error during booking process for roomId=" + booking.getRoomId(), e);
             if (conn != null) {
@@ -199,12 +186,24 @@ public class UserRoomService {
                     LOGGER.log(Level.SEVERE, "Rollback failed", rollbackEx);
                 }
             }
-            throw e; // Ném lại ngoại lệ để controller xử lý
+            throw e;
         } finally {
-            if (stmtBooking != null) try { stmtBooking.close(); } catch (SQLException ignored) {}
-            if (stmtRoom != null) try { stmtRoom.close(); } catch (SQLException ignored) {}
-            if (stmtHistory != null) try { stmtHistory.close(); } catch (SQLException ignored) {}
-            if (conn != null) try { conn.close(); } catch (SQLException ignored) {}
+            if (stmtBooking != null) try {
+                stmtBooking.close();
+            } catch (SQLException ignored) {
+            }
+            if (stmtRoom != null) try {
+                stmtRoom.close();
+            } catch (SQLException ignored) {
+            }
+            if (stmtHistory != null) try {
+                stmtHistory.close();
+            } catch (SQLException ignored) {
+            }
+            if (conn != null) try {
+                conn.close();
+            } catch (SQLException ignored) {
+            }
         }
     }
 
@@ -220,7 +219,7 @@ public class UserRoomService {
                 + "r.room_number, rt.type_name "
                 + "FROM Bookings b "
                 + "JOIN Rooms r ON b.room_id = r.room_id "
-                + "JOIN RoomTypes rt ON r.type_id = rt.type_id "
+                + "JOIN Room_Types rt ON r.type_id = rt.type_id "
                 + "WHERE b.user_id = ? "
                 + "ORDER BY b.created_at DESC";
 
@@ -238,8 +237,8 @@ public class UserRoomService {
                     booking.setCheckOutDate(rs.getDate("check_out_date"));
                     booking.setTotalPrice(rs.getDouble("total_price"));
                     booking.setStatus(rs.getString("status"));
-                    booking.setAdults(rs.getInt("num_adults"));
-                    booking.setChildren(rs.getInt("num_children"));
+                    booking.setAdults(rs.getInt("num_adults"));    // Sửa thành num_adults
+                    booking.setChildren(rs.getInt("num_children")); // Sửa thành num_children
                     Room room = new Room();
                     room.setRoomNumber(rs.getString("room_number"));
                     RoomType roomType = new RoomType();
@@ -292,5 +291,101 @@ public class UserRoomService {
             throw e;
         }
         return historyList;
+    }
+
+    public void cancelBooking(int bookingId, int userId) throws SQLException {
+        Connection conn = null;
+        PreparedStatement stmtBooking = null;
+        PreparedStatement stmtRoom = null;
+        PreparedStatement stmtHistory = null;
+
+        try {
+            conn = DatabaseUtil.getConnection();
+            conn.setAutoCommit(false);
+            LOGGER.info("Starting transaction to cancel bookingId=" + bookingId);
+
+            // 1. Kiểm tra đặt phòng có thể hủy không
+            String checkQuery = "SELECT status, check_in_date, room_id FROM Bookings WHERE booking_id = ? AND user_id = ?";
+            try (PreparedStatement checkStmt = conn.prepareStatement(checkQuery)) {
+                checkStmt.setInt(1, bookingId);
+                checkStmt.setInt(2, userId);
+                ResultSet rs = checkStmt.executeQuery();
+                if (!rs.next()) {
+                    throw new SQLException("Booking not found or not owned by userId=" + userId);
+                }
+                String status = rs.getString("status");
+                java.sql.Date checkInDate = rs.getDate("check_in_date");
+                int roomId = rs.getInt("room_id");
+
+                long hoursUntilCheckIn = TimeUnit.HOURS.convert(checkInDate.getTime() - new Date().getTime(), TimeUnit.MILLISECONDS);
+                if (!"Pending".equals(status) || hoursUntilCheckIn <= 24) {
+                    throw new SQLException("Booking cannot be cancelled: status=" + status + ", hours until check-in=" + hoursUntilCheckIn);
+                }
+
+                // 2. Cập nhật trạng thái booking
+                String updateBookingQuery = "UPDATE Bookings SET status = 'Cancelled' WHERE booking_id = ?";
+                stmtBooking = conn.prepareStatement(updateBookingQuery);
+                stmtBooking.setInt(1, bookingId);
+                int rowsAffected = stmtBooking.executeUpdate();
+                LOGGER.info("Updated Booking status to Cancelled, rows affected: " + rowsAffected);
+                if (rowsAffected != 1) {
+                    throw new SQLException("Failed to update booking status for bookingId=" + bookingId);
+                }
+
+                // 3. Cập nhật trạng thái phòng
+                String updateRoomQuery = "UPDATE Rooms SET is_available = 1 WHERE room_id = ?";
+                stmtRoom = conn.prepareStatement(updateRoomQuery);
+                stmtRoom.setInt(1, roomId);
+                rowsAffected = stmtRoom.executeUpdate();
+                LOGGER.info("Updated Room availability, rows affected: " + rowsAffected);
+                if (rowsAffected != 1) {
+                    throw new SQLException("Failed to update room availability for roomId=" + roomId);
+                }
+
+                // 4. Ghi lịch sử thay đổi trạng thái
+                String insertHistoryQuery = "INSERT INTO Booking_History (booking_id, changed_by, old_status, new_status) VALUES (?, ?, ?, ?)";
+                stmtHistory = conn.prepareStatement(insertHistoryQuery);
+                stmtHistory.setInt(1, bookingId);
+                stmtHistory.setInt(2, userId);
+                stmtHistory.setString(3, "Pending");
+                stmtHistory.setString(4, "Cancelled");
+                rowsAffected = stmtHistory.executeUpdate();
+                LOGGER.info("Inserted into Booking_History, rows affected: " + rowsAffected);
+                if (rowsAffected != 1) {
+                    throw new SQLException("Failed to insert into Booking_History for bookingId=" + bookingId);
+                }
+            }
+
+            conn.commit();
+            LOGGER.info("Transaction committed successfully for cancelling bookingId=" + bookingId);
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error cancelling bookingId=" + bookingId, e);
+            if (conn != null) {
+                try {
+                    LOGGER.info("Rolling back transaction for bookingId=" + bookingId);
+                    conn.rollback();
+                } catch (SQLException rollbackEx) {
+                    LOGGER.log(Level.SEVERE, "Rollback failed", rollbackEx);
+                }
+            }
+            throw e;
+        } finally {
+            if (stmtBooking != null) try {
+                stmtBooking.close();
+            } catch (SQLException ignored) {
+            }
+            if (stmtRoom != null) try {
+                stmtRoom.close();
+            } catch (SQLException ignored) {
+            }
+            if (stmtHistory != null) try {
+                stmtHistory.close();
+            } catch (SQLException ignored) {
+            }
+            if (conn != null) try {
+                conn.close();
+            } catch (SQLException ignored) {
+            }
+        }
     }
 }
