@@ -17,13 +17,13 @@ com\mycompany\oceanichotel\controllers\user\UserPaymentController.class
 com\mycompany\oceanichotel\models\User.class
 com\mycompany\oceanichotel\services\admin\AdminRoomTypeService.class
 com\mycompany\oceanichotel\controllers\user\IndexServlet.class
+com\mycompany\oceanichotel\models\BookingHistory.class
 com\mycompany\oceanichotel\controllers\admin\AdminReportController.class
 com\mycompany\oceanichotel\utils\DatabaseUtil.class
 com\mycompany\oceanichotel\services\admin\AdminSettingsService.class
 com\mycompany\oceanichotel\services\user\UserService.class
 com\mycompany\oceanichotel\controllers\admin\AdminUserController.class
 com\mycompany\oceanichotel\controllers\user\RegisterController.class
-com\mycompany\oceanichotel\controllers\admin\RoomManagementController.class
 com\mycompany\oceanichotel\models\RoomType.class
 com\mycompany\oceanichotel\models\RoomTypeImage.class
 com\mycompany\oceanichotel\models\Room.class
@@ -39,6 +39,7 @@ com\mycompany\oceanichotel\controllers\admin\AdminRoomTypeController.class
 com\mycompany\oceanichotel\services\admin\AdminReportService.class
 com\mycompany\oceanichotel\services\admin\AdminBookingService.class
 com\mycompany\oceanichotel\models\LoginHistory.class
+com\mycompany\oceanichotel\controllers\user\UserRoomDetailsController.class
 com\mycompany\oceanichotel\services\admin\AdminRoomService.class
 com\mycompany\oceanichotel\resources\JakartaEE10Resource.class
 com\mycompany\oceanichotel\services\user\UserDashboardService.class
