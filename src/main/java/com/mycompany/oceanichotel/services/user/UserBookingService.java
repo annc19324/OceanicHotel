@@ -17,17 +17,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class UserBookingService {
+
     private static final Logger LOGGER = Logger.getLogger(UserBookingService.class.getName());
 
     public List<Booking> getUserBookings(int userId, String statusFilter, String checkInFrom, String checkInTo, String sortOption) throws SQLException {
         List<Booking> bookings = new ArrayList<>();
         StringBuilder query = new StringBuilder(
-            "SELECT b.booking_id, b.user_id, b.room_id, b.check_in_date, b.check_out_date, "
-            + "b.total_price, b.status, b.num_adults, b.num_children, b.created_at, r.room_number, rt.type_name "
-            + "FROM Bookings b "
-            + "JOIN Rooms r ON b.room_id = r.room_id "
-            + "JOIN Room_Types rt ON r.type_id = rt.type_id "
-            + "WHERE b.user_id = ?"
+                "SELECT b.booking_id, b.user_id, b.room_id, b.check_in_date, b.check_out_date, "
+                + "b.total_price, b.status, b.num_adults, b.num_children, b.created_at, r.room_number, rt.type_name "
+                + "FROM Bookings b "
+                + "JOIN Rooms r ON b.room_id = r.room_id "
+                + "JOIN Room_Types rt ON r.type_id = rt.type_id "
+                + "WHERE b.user_id = ?"
         );
 
         List<String> conditions = new ArrayList<>();
@@ -71,8 +72,7 @@ public class UserBookingService {
             query.append(" ORDER BY b.created_at DESC");
         }
 
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query.toString())) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query.toString())) {
             int paramIndex = 1;
             stmt.setInt(paramIndex++, userId);
             if (statusFilter != null && !statusFilter.isEmpty()) {
@@ -98,6 +98,7 @@ public class UserBookingService {
                 booking.setChildren(rs.getInt("num_children"));
                 booking.setTotalPrice(rs.getDouble("total_price"));
                 booking.setStatus(rs.getString("status"));
+                booking.setCreatedAt(rs.getTimestamp("created_at")); // Lấy created_at
 
                 long diffInMillies = Math.abs(booking.getCheckOutDate().getTime() - booking.getCheckInDate().getTime());
                 int nights = (int) TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
@@ -105,6 +106,17 @@ public class UserBookingService {
 
                 long hoursUntilCheckIn = TimeUnit.HOURS.convert(booking.getCheckInDate().getTime() - new Date().getTime(), TimeUnit.MILLISECONDS);
                 booking.setCanCancel(hoursUntilCheckIn > 24);
+                long minutesSinceCreation = TimeUnit.MINUTES.convert(new Date().getTime() - booking.getCreatedAt().getTime(), TimeUnit.MILLISECONDS);
+
+                // Kiểm tra thời hạn thanh toán (24 giờ)
+                if ("Pending".equals(booking.getStatus()) && booking.getCreatedAt() != null) {
+                    long hoursSinceCreation = TimeUnit.HOURS.convert(new Date().getTime() - booking.getCreatedAt().getTime(), TimeUnit.MILLISECONDS);
+//                    if (hoursSinceCreation > 24) {
+                    if (minutesSinceCreation > 15) {
+                        cancelExpiredBooking(booking.getBookingId(), userId);
+                        continue; // Bỏ qua booking đã hủy
+                    }
+                }
 
                 Room room = new Room();
                 room.setRoomId(rs.getInt("room_id"));
@@ -121,11 +133,36 @@ public class UserBookingService {
         return bookings;
     }
 
+    private void cancelExpiredBooking(int bookingId, int userId) throws SQLException {
+        String updateQuery = "UPDATE Bookings SET status = 'Cancelled' WHERE booking_id = ? AND user_id = ? AND status = 'Pending'";
+        String insertHistoryQuery = "INSERT INTO Booking_History (booking_id, changed_by, old_status, new_status, changed_at) VALUES (?, ?, ?, ?, GETDATE())";
+
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement updateStmt = conn.prepareStatement(updateQuery)) {
+                updateStmt.setInt(1, bookingId);
+                updateStmt.setInt(2, userId);
+                updateStmt.executeUpdate();
+            }
+
+            try (PreparedStatement historyStmt = conn.prepareStatement(insertHistoryQuery)) {
+                historyStmt.setInt(1, bookingId);
+                historyStmt.setInt(2, userId);
+                historyStmt.setString(3, "Pending");
+                historyStmt.setString(4, "Cancelled");
+                historyStmt.executeUpdate();
+            }
+
+            conn.commit();
+            LOGGER.info("Booking ID=" + bookingId + " auto-cancelled due to payment timeout.");
+        }
+    }
+
     public Booking getBookingById(int bookingId, int userId) throws SQLException {
         String query = "SELECT b.booking_id, b.total_price, b.status "
-                     + "FROM Bookings b WHERE b.booking_id = ? AND b.user_id = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+                + "FROM Bookings b WHERE b.booking_id = ? AND b.user_id = ?";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, bookingId);
             stmt.setInt(2, userId);
             ResultSet rs = stmt.executeQuery();
@@ -142,8 +179,7 @@ public class UserBookingService {
 
     public int createTransaction(int bookingId, int userId, double amount) throws SQLException {
         String query = "INSERT INTO Transactions (booking_id, user_id, amount, status) VALUES (?, ?, ?, 'Pending')";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, bookingId);
             stmt.setInt(2, userId);
             stmt.setDouble(3, amount);
@@ -157,16 +193,58 @@ public class UserBookingService {
         }
     }
 
-    public void updateTransactionStatus(int transactionId, String status) throws SQLException {
-        String query = "UPDATE Transactions SET status = ? WHERE transaction_id = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, status);
-            stmt.setInt(2, transactionId);
-            int rowsAffected = stmt.executeUpdate();
-            if (rowsAffected == 0) {
-                throw new SQLException("Transaction not found.");
+    public boolean hasPendingMoMoTransaction(int bookingId) throws SQLException {
+        String query = "SELECT COUNT(*) FROM Transactions WHERE booking_id = ? AND status = 'Pending'";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, bookingId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
             }
+            return false;
+        }
+    }
+
+    public void confirmMoMoPayment(int bookingId, int userId) throws SQLException {
+        String updateBookingQuery = "UPDATE Bookings SET status = 'Confirmed' WHERE booking_id = ? AND user_id = ? AND status = 'Pending'";
+        String updateTransactionQuery = "UPDATE Transactions SET status = 'Success' WHERE booking_id = ? AND status = 'Pending'";
+        String insertHistoryQuery = "INSERT INTO Booking_History (booking_id, changed_by, old_status, new_status, changed_at) VALUES (?, ?, ?, ?, GETDATE())";
+
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            conn.setAutoCommit(false); // Bắt đầu transaction
+
+            // Cập nhật trạng thái booking
+            try (PreparedStatement updateStmt = conn.prepareStatement(updateBookingQuery)) {
+                updateStmt.setInt(1, bookingId);
+                updateStmt.setInt(2, userId);
+                int rowsAffected = updateStmt.executeUpdate();
+                if (rowsAffected == 0) {
+                    throw new SQLException("Booking not found or not in Pending status.");
+                }
+            }
+
+            // Cập nhật trạng thái giao dịch
+            try (PreparedStatement updateTransStmt = conn.prepareStatement(updateTransactionQuery)) {
+                updateTransStmt.setInt(1, bookingId);
+                int rowsAffected = updateTransStmt.executeUpdate();
+                if (rowsAffected == 0) {
+                    throw new SQLException("No pending MoMo transaction found.");
+                }
+            }
+
+            // Ghi lịch sử thay đổi trạng thái
+            try (PreparedStatement historyStmt = conn.prepareStatement(insertHistoryQuery)) {
+                historyStmt.setInt(1, bookingId);
+                historyStmt.setInt(2, userId);
+                historyStmt.setString(3, "Pending");
+                historyStmt.setString(4, "Confirmed");
+                historyStmt.executeUpdate();
+            }
+
+            conn.commit(); // Commit transaction
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error confirming MoMo payment for booking ID=" + bookingId, e);
+            throw e;
         }
     }
 
@@ -177,7 +255,6 @@ public class UserBookingService {
         try (Connection conn = DatabaseUtil.getConnection()) {
             conn.setAutoCommit(false); // Bắt đầu transaction
 
-            // Cập nhật trạng thái booking
             try (PreparedStatement updateStmt = conn.prepareStatement(updateQuery)) {
                 updateStmt.setInt(1, bookingId);
                 updateStmt.setInt(2, userId);
@@ -187,10 +264,9 @@ public class UserBookingService {
                 }
             }
 
-            // Ghi lịch sử thay đổi trạng thái
             try (PreparedStatement historyStmt = conn.prepareStatement(insertHistoryQuery)) {
                 historyStmt.setInt(1, bookingId);
-                historyStmt.setInt(2, userId); // Lưu userId dưới dạng số nguyên
+                historyStmt.setInt(2, userId);
                 historyStmt.setString(3, "Pending");
                 historyStmt.setString(4, "Confirmed");
                 historyStmt.executeUpdate();
@@ -205,8 +281,7 @@ public class UserBookingService {
 
     public double calculateTotalPrice(int roomId, String checkIn, String checkOut) throws SQLException {
         String query = "SELECT price_per_night FROM Rooms WHERE room_id = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, roomId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -221,11 +296,45 @@ public class UserBookingService {
         }
     }
 
+    public boolean isRoomAvailable(int roomId, Date checkInDate, Date checkOutDate) throws SQLException {
+        String query = "SELECT COUNT(*) FROM Bookings "
+                + "WHERE room_id = ? AND status != 'Cancelled' "
+                + "AND (check_in_date < ? AND check_out_date > ?)";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, roomId);
+            stmt.setDate(2, new java.sql.Date(checkOutDate.getTime()));
+            stmt.setDate(3, new java.sql.Date(checkInDate.getTime()));
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) == 0; // Trả về true nếu không có lịch trùng
+            }
+            return true;
+        }
+    }
+
+//    public void saveBooking(Booking booking) throws SQLException {
+//        String query = "INSERT INTO Bookings (user_id, room_id, check_in_date, check_out_date, num_adults, num_children, total_price, status) "
+//                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+//        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+//            stmt.setInt(1, booking.getUserId());
+//            stmt.setInt(2, booking.getRoomId());
+//            stmt.setDate(3, new java.sql.Date(booking.getCheckInDate().getTime()));
+//            stmt.setDate(4, new java.sql.Date(booking.getCheckOutDate().getTime()));
+//            stmt.setInt(5, booking.getAdults());
+//            stmt.setInt(6, booking.getChildren());
+//            stmt.setDouble(7, booking.getTotalPrice());
+//            stmt.setString(8, booking.getStatus());
+//            stmt.executeUpdate();
+//        }
+//    }
     public void saveBooking(Booking booking) throws SQLException {
-        String query = "INSERT INTO Bookings (user_id, room_id, check_in_date, check_out_date, num_adults, num_children, total_price, status) "
-                     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        if (!isRoomAvailable(booking.getRoomId(), booking.getCheckInDate(), booking.getCheckOutDate())) {
+            throw new SQLException("Room is not available for the selected dates.");
+        }
+
+        String query = "INSERT INTO Bookings (user_id, room_id, check_in_date, check_out_date, num_adults, num_children, total_price, status, created_at) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, GETDATE())";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, booking.getUserId());
             stmt.setInt(2, booking.getRoomId());
             stmt.setDate(3, new java.sql.Date(booking.getCheckInDate().getTime()));
@@ -235,6 +344,8 @@ public class UserBookingService {
             stmt.setDouble(7, booking.getTotalPrice());
             stmt.setString(8, booking.getStatus());
             stmt.executeUpdate();
+            LOGGER.info("Booking saved for roomId=" + booking.getRoomId());
         }
     }
+
 }

@@ -49,17 +49,16 @@ public class UserBookingsController extends HttpServlet {
             List<Booking> bookings = userBookingService.getUserBookings(
                 user.getUserId(), statusFilter, checkInFrom, checkInTo, sortOption
             );
-            LOGGER.log(Level.INFO, "Retrieved {0} bookings for userId={1}", new Object[]{bookings.size(), user.getUserId()});
-            for (Booking b : bookings) {
-                LOGGER.info("Booking: ID=" + b.getBookingId() + ", Room=" + b.getRoom().getRoomNumber() + ", Status=" + b.getStatus());
+            // Kiểm tra xem booking có giao dịch MoMo Pending không
+            for (Booking booking : bookings) {
+                boolean hasPendingTransaction = userBookingService.hasPendingMoMoTransaction(booking.getBookingId());
+                booking.setHasPendingTransaction(hasPendingTransaction);
             }
+            LOGGER.log(Level.INFO, "Retrieved {0} bookings for userId={1}", new Object[]{bookings.size(), user.getUserId()});
             request.setAttribute("bookings", bookings);
 
             List<BookingHistory> history = userRoomService.getBookingHistory(user.getUserId());
             LOGGER.log(Level.INFO, "Retrieved {0} history records for userId={1}", new Object[]{history.size(), user.getUserId()});
-            for (BookingHistory h : history) {
-                LOGGER.info("History: ID=" + h.getHistoryId() + ", Booking ID=" + h.getBookingId() + ", New Status=" + h.getNewStatus());
-            }
             request.setAttribute("history", history);
 
             request.setAttribute("statusFilter", statusFilter);
@@ -70,7 +69,7 @@ public class UserBookingsController extends HttpServlet {
             request.getRequestDispatcher("/WEB-INF/views/user/bookings.jsp").forward(request, response);
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error retrieving bookings or history for userId=" + user.getUserId(), e);
-            request.setAttribute("error", "Unable to load bookings or history due to a database error: " + e.getMessage());
+            request.setAttribute("error", "Unable to load bookings or history: " + e.getMessage());
             request.getRequestDispatcher("/WEB-INF/views/user/bookings.jsp").forward(request, response);
         }
     }
@@ -100,21 +99,20 @@ public class UserBookingsController extends HttpServlet {
                 }
 
                 if ("test".equals(method)) {
-                    // Thanh toán Test: xác nhận ngay lập tức
                     userBookingService.confirmBooking(bookingId, user.getUserId());
                     LOGGER.info("Booking ID=" + bookingId + " confirmed immediately (Test payment) by userId=" + user.getUserId());
                 } else if ("hotel".equals(method)) {
-                    // Thanh toán tại khách sạn: giữ trạng thái Pending, không làm gì thêm
                     LOGGER.info("Booking ID=" + bookingId + " set for payment at hotel, status remains Pending.");
                 } else if ("qr".equals(method)) {
-                    // Thanh toán bằng mã QR: giữ trạng thái Pending, không làm gì thêm
                     LOGGER.info("Booking ID=" + bookingId + " set for QR payment, status remains Pending.");
                 } else if ("momo".equals(method)) {
-                    // Thanh toán qua MoMo: tạo giao dịch và chờ xác nhận (đang thực hiện)
                     int transactionId = userBookingService.createTransaction(bookingId, user.getUserId(), booking.getTotalPrice());
                     LOGGER.info("Transaction ID=" + transactionId + " created for MoMo payment for booking ID=" + bookingId);
-                    // Hiện tại chỉ tạo giao dịch, chưa xác nhận ngay, chờ logic MoMo hoàn thiện
                 }
+            } else if ("confirmMoMo".equals(action)) {
+                // Xác nhận thanh toán MoMo
+                userBookingService.confirmMoMoPayment(bookingId, user.getUserId());
+                LOGGER.info("MoMo payment confirmed for booking ID=" + bookingId + " by userId=" + user.getUserId());
             }
             response.sendRedirect(request.getContextPath() + "/user/bookings");
         } catch (SQLException e) {
