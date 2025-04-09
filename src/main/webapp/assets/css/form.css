@@ -15,6 +15,7 @@
 .form-group input[type="password"],
 .form-group input[type="number"],
 .form-group input[type="file"],
+.form-group input[type="date"],
 #description,
 .form-group select {
     width: 50%;

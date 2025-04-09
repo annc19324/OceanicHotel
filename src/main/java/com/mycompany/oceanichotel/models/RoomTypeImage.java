@@ -17,7 +17,7 @@ public class RoomTypeImage {
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public boolean isPrimary() { return isPrimary; }
-    public void setPrimary(boolean primary) { isPrimary = primary; }
+    public void setIsPrimary(boolean isPrimary) { this.isPrimary = isPrimary; }
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
 }

@@ -14,6 +14,8 @@
     }
     int currentPage = request.getAttribute("currentPage") != null ? (Integer) request.getAttribute("currentPage") : 1;
     int totalPages = request.getAttribute("totalPages") != null ? (Integer) request.getAttribute("totalPages") : 1;
+    String error = request.getParameter("error"); // Lấy thông báo lỗi từ URL
+    String message = request.getParameter("message"); // Lấy thông báo thành công từ URL
 %>
 <!DOCTYPE html>
 <html lang="<%= language%>">
@@ -25,7 +27,6 @@
         <link rel="stylesheet" href="<%= request.getContextPath()%>/assets/css/sidebar.css">
         <link rel="stylesheet" href="<%= request.getContextPath()%>/assets/css/table.css">
         <link rel="stylesheet" href="<%= request.getContextPath()%>/assets/css/modal.css">
-
     </head>
     <body class="<%= theme.equals("dark") ? "dark-mode" : ""%>" data-theme="<%= theme%>">
         <div class="admin-container">
@@ -34,7 +35,7 @@
                 <ul>
                     <li><a href="<%= request.getContextPath()%>/admin/dashboard"><%= language.equals("vi") ? "Tổng quan" : "Dashboard"%></a></li>
                     <li><a href="<%= request.getContextPath()%>/admin/users"><%= language.equals("vi") ? "Quản lý người dùng" : "User Management"%></a></li>
-                    <li><a href="<%= request.getContextPath() %>/admin/room-types"><%= language.equals("vi") ? "Quản lý loại phòng" : "Room Type Management" %></a></li>
+                    <li><a href="<%= request.getContextPath()%>/admin/room-types"><%= language.equals("vi") ? "Quản lý loại phòng" : "Room Type Management"%></a></li>
                     <li class="active"><a href="<%= request.getContextPath()%>/admin/rooms" class="active"><%= language.equals("vi") ? "Quản lý phòng" : "Room Management"%></a></li>
                     <li><a href="<%= request.getContextPath()%>/admin/bookings"><%= language.equals("vi") ? "Quản lý đặt phòng" : "Booking Management"%></a></li>
                     <li><a href="<%= request.getContextPath()%>/admin/transactions"><%= language.equals("vi") ? "Quản lý giao dịch" : "Transaction Management"%></a></li>
@@ -44,6 +45,37 @@
                 </ul>
             </nav>
             <div class="main-content">
+                <!-- Hiển thị thông báo lỗi -->
+                <% if (error != null) { %>
+                    <div class="custom-modal" id="errorModal" style="display: flex;">
+                        <div class="modal-content animate-modal">
+                            <h3><%= language.equals("vi") ? "Lỗi" : "Error" %></h3>
+                            <p><%= error %></p>
+                            <div class="modal-buttons">
+                                <button class="modal-btn cancel-btn" onclick="document.getElementById('errorModal').style.display = 'none'">
+                                    <%= language.equals("vi") ? "Đóng" : "Close" %>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+
+                <!-- Hiển thị thông báo thành công -->
+                <% if (message != null) { %>
+                    <div class="custom-modal" id="successModal" style="display: flex;">
+                        <div class="modal-content animate-modal">
+                            <h3><%= language.equals("vi") ? "Thành công" : "Success" %></h3>
+                            <p><%= message.equals("delete_success") ? (language.equals("vi") ? "Xóa phòng thành công!" : "Room deleted successfully!") :
+                                   message.equals("add_success") ? (language.equals("vi") ? "Thêm phòng thành công!" : "Room added successfully!") :
+                                   message.equals("update_success") ? (language.equals("vi") ? "Cập nhật phòng thành công!" : "Room updated successfully!") : "" %></p>
+                            <div class="modal-buttons">
+                                <button class="modal-btn cancel-btn" onclick="document.getElementById('successModal').style.display = 'none'">
+                                    <%= language.equals("vi") ? "Đóng" : "Close" %>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
 
                 <div class="table-header">
                     <div class="add-room">
@@ -66,11 +98,9 @@
                             <th><%= language.equals("vi") ? "Số phòng" : "Room Number"%></th>
                             <th><%= language.equals("vi") ? "Loại phòng" : "Room Type"%></th>
                             <th><%= language.equals("vi") ? "Giá mỗi đêm" : "Price/Night"%></th>
-                            <!--<th><%= language.equals("vi") ? "Hình ảnh" : "Image"%></th>-->
                             <th><%= language.equals("vi") ? "Số người lớn tối đa" : "Max Adults"%></th>
                             <th><%= language.equals("vi") ? "Số trẻ em tối đa" : "Max Children"%></th>
                             <th><%= language.equals("vi") ? "Trạng thái" : "Status"%></th>
-                            <!--<th><%= language.equals("vi") ? "Ngày tạo" : "Created At"%></th>-->
                             <th> </th>
                         </tr>
                     </thead>
@@ -83,8 +113,9 @@
                         <tr>
                             <td><%= room.getRoomId()%></td>
                             <td><%= room.getRoomNumber()%></td>
-                           <td><%= room.getRoomType() != null ? room.getRoomType().getTypeName() : "N/A" %></td>
-                <td><%= String.format("%.1f VNĐ", room.getPricePerNight()) %></td>
+                            <td><%= room.getRoomType() != null ? room.getRoomType().getTypeName() : "N/A"%></td>
+                            <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+                            <td><fmt:formatNumber value="<%= room.getPricePerNight()%>" type="number" minFractionDigits="0" maxFractionDigits="2"/> VNĐ</td>
                             <td><%= room.getMaxAdults()%></td>
                             <td><%= room.getMaxChildren()%></td>
                             <td>
@@ -92,9 +123,6 @@
                                     <%= room.isAvailable() ? (language.equals("vi") ? "Trống" : "Available") : (language.equals("vi") ? "Đã đặt" : "Occupied")%>
                                 </span>
                             </td>
-                            <!--<td>
-    <%--<%= room.getCreatedAt()%>--%>
-<!--</td>-->
                             <td>
                                 <div class="dropdown">
                                     <button class="dropdown-btn">⋮</button>
@@ -104,9 +132,6 @@
                                         </a>
                                         <a href="javascript:void(0)" onclick="confirmDelete('<%= room.getRoomId()%>')">
                                             <%= language.equals("vi") ? "Xóa phòng" : "Delete Room"%>
-                                        </a>
-                                        <a href="<%= request.getContextPath()%>/admin/rooms/edit-history?roomId=<%= room.getRoomId()%>">
-                                            <%= language.equals("vi") ? "Xem lịch sử chỉnh sửa" : "View Edit History"%>
                                         </a>
                                     </div>
                                 </div>
@@ -160,7 +185,9 @@
 
             function confirmDelete(roomId) {
                 const lang = '<%= language%>';
-                const message = lang === 'vi' ? 'Bạn có chắc chắn muốn xóa phòng này không?' : 'Are you sure you want to delete this room?';
+                const message = lang === 'vi' ? 
+                    'Bạn có chắc chắn muốn xóa phòng này không? Nếu phòng đang được sử dụng hoặc có đặt phòng liên quan, hành động này sẽ không thành công.' : 
+                    'Are you sure you want to delete this room? This action will fail if the room is occupied or has active bookings.';
                 if (confirm(message)) {
                     const form = document.createElement('form');
                     form.method = 'POST';
@@ -173,27 +200,6 @@
                     document.body.appendChild(form);
                     form.submit();
                 }
-            }
-
-            function changeLanguage() {
-                const language = document.getElementById('languageSelect').value;
-                fetch('<%= request.getContextPath()%>/language', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: 'language=' + encodeURIComponent(language)
-                }).then(() => location.reload());
-            }
-
-            function changeTheme() {
-                const theme = document.getElementById('themeSelect').value;
-                fetch('<%= request.getContextPath()%>/theme', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: 'theme=' + encodeURIComponent(theme)
-                }).then(() => {
-                    document.body.className = theme === 'dark' ? 'dark-mode' : '';
-                    document.body.setAttribute('data-theme', theme);
-                });
             }
         </script>
     </body>

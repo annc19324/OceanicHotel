@@ -1,45 +1,37 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.oceanichotel.models;
 
-import java.sql.Timestamp;
+import java.util.Date;
 
-/**
- *
- * @author annc1
- */
 public class User {
 
     private int userId;
     private String username;
-    private String email;
     private String password;
+    private String email;
     private String role;
+    private String fullName;
+    private String phoneNumber;
+    private String cccd;
+    private Date dateOfBirth;
+    private String gender;
     private String avatar;
     private boolean isActive;
-    private Timestamp createdAt;
+    private Date createdAt;
 
-    private String language;
-    private String theme;
+    private String language; // Thêm thuộc tính language
+    private String theme;   // Thêm thuộc tính theme
 
     public User() {
-        this.language = "en";
-        this.theme = "light";
     }
 
-    public User(String username, String password, String email) {
+    public User(String username, String password, String email, String fullName) {
         this.username = username;
         this.password = password;
         this.email = email;
-        this.role = "user";
-        this.isActive = true;
-        this.language = "en";
-        this.theme = "light";
+        this.fullName = fullName;
     }
 
-    // Getter và Setter
+    // Getters và Setters
     public int getUserId() {
         return userId;
     }
@@ -56,15 +48,6 @@ public class User {
         this.username = username;
     }
 
-    // Thêm các getter/setter còn lại tương tự
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public String getPassword() {
         return password;
     }
@@ -73,12 +56,60 @@ public class User {
         this.password = password;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public String getRole() {
         return role;
     }
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public String getCccd() {
+        return cccd;
+    }
+
+    public void setCccd(String cccd) {
+        this.cccd = cccd;
+    }
+
+    public Date getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(Date dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
     }
 
     public String getAvatar() {
@@ -97,14 +128,15 @@ public class User {
         isActive = active;
     }
 
-    public Timestamp getCreatedAt() {
+    public Date getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Timestamp createdAt) {
+    public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
-    
+    // Thêm getter và setter cho language
+
     public String getLanguage() {
         return language;
     }
@@ -113,6 +145,7 @@ public class User {
         this.language = language;
     }
 
+    // Thêm getter và setter cho theme
     public String getTheme() {
         return theme;
     }

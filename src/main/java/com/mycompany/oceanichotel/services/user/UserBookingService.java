@@ -4,6 +4,7 @@ import com.mycompany.oceanichotel.models.Booking;
 import com.mycompany.oceanichotel.models.Room;
 import com.mycompany.oceanichotel.models.RoomType;
 import com.mycompany.oceanichotel.utils.DatabaseUtil;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -94,11 +95,11 @@ public class UserBookingService {
                 booking.setRoomId(rs.getInt("room_id"));
                 booking.setCheckInDate(rs.getDate("check_in_date"));
                 booking.setCheckOutDate(rs.getDate("check_out_date"));
-                booking.setAdults(rs.getInt("num_adults"));
-                booking.setChildren(rs.getInt("num_children"));
-                booking.setTotalPrice(rs.getDouble("total_price"));
+                booking.setNumAdults(rs.getInt("num_adults"));
+                booking.setNumChildren(rs.getInt("num_children"));
+                booking.setTotalPrice(rs.getBigDecimal("total_price"));
                 booking.setStatus(rs.getString("status"));
-                booking.setCreatedAt(rs.getTimestamp("created_at")); // Lấy created_at
+                booking.setCreatedAt(rs.getTimestamp("created_at"));
 
                 long diffInMillies = Math.abs(booking.getCheckOutDate().getTime() - booking.getCheckInDate().getTime());
                 int nights = (int) TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
@@ -108,13 +109,11 @@ public class UserBookingService {
                 booking.setCanCancel(hoursUntilCheckIn > 24);
                 long minutesSinceCreation = TimeUnit.MINUTES.convert(new Date().getTime() - booking.getCreatedAt().getTime(), TimeUnit.MILLISECONDS);
 
-                // Kiểm tra thời hạn thanh toán (24 giờ)
                 if ("Pending".equals(booking.getStatus()) && booking.getCreatedAt() != null) {
                     long hoursSinceCreation = TimeUnit.HOURS.convert(new Date().getTime() - booking.getCreatedAt().getTime(), TimeUnit.MILLISECONDS);
-//                    if (hoursSinceCreation > 24) {
                     if (minutesSinceCreation > 15) {
                         cancelExpiredBooking(booking.getBookingId(), userId);
-                        continue; // Bỏ qua booking đã hủy
+                        continue;
                     }
                 }
 
@@ -169,7 +168,7 @@ public class UserBookingService {
             if (rs.next()) {
                 Booking booking = new Booking();
                 booking.setBookingId(rs.getInt("booking_id"));
-                booking.setTotalPrice(rs.getDouble("total_price"));
+                booking.setTotalPrice(rs.getBigDecimal("total_price"));
                 booking.setStatus(rs.getString("status"));
                 return booking;
             }
@@ -182,7 +181,7 @@ public class UserBookingService {
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, bookingId);
             stmt.setInt(2, userId);
-            stmt.setDouble(3, amount);
+            stmt.setBigDecimal(3, BigDecimal.valueOf(amount)); // Chuyển double thành BigDecimal
             stmt.executeUpdate();
 
             ResultSet rs = stmt.getGeneratedKeys();
@@ -211,9 +210,8 @@ public class UserBookingService {
         String insertHistoryQuery = "INSERT INTO Booking_History (booking_id, changed_by, old_status, new_status, changed_at) VALUES (?, ?, ?, ?, GETDATE())";
 
         try (Connection conn = DatabaseUtil.getConnection()) {
-            conn.setAutoCommit(false); // Bắt đầu transaction
+            conn.setAutoCommit(false);
 
-            // Cập nhật trạng thái booking
             try (PreparedStatement updateStmt = conn.prepareStatement(updateBookingQuery)) {
                 updateStmt.setInt(1, bookingId);
                 updateStmt.setInt(2, userId);
@@ -223,7 +221,6 @@ public class UserBookingService {
                 }
             }
 
-            // Cập nhật trạng thái giao dịch
             try (PreparedStatement updateTransStmt = conn.prepareStatement(updateTransactionQuery)) {
                 updateTransStmt.setInt(1, bookingId);
                 int rowsAffected = updateTransStmt.executeUpdate();
@@ -232,7 +229,6 @@ public class UserBookingService {
                 }
             }
 
-            // Ghi lịch sử thay đổi trạng thái
             try (PreparedStatement historyStmt = conn.prepareStatement(insertHistoryQuery)) {
                 historyStmt.setInt(1, bookingId);
                 historyStmt.setInt(2, userId);
@@ -241,7 +237,7 @@ public class UserBookingService {
                 historyStmt.executeUpdate();
             }
 
-            conn.commit(); // Commit transaction
+            conn.commit();
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error confirming MoMo payment for booking ID=" + bookingId, e);
             throw e;
@@ -253,7 +249,7 @@ public class UserBookingService {
         String insertHistoryQuery = "INSERT INTO Booking_History (booking_id, changed_by, old_status, new_status, changed_at) VALUES (?, ?, ?, ?, GETDATE())";
 
         try (Connection conn = DatabaseUtil.getConnection()) {
-            conn.setAutoCommit(false); // Bắt đầu transaction
+            conn.setAutoCommit(false);
 
             try (PreparedStatement updateStmt = conn.prepareStatement(updateQuery)) {
                 updateStmt.setInt(1, bookingId);
@@ -272,25 +268,25 @@ public class UserBookingService {
                 historyStmt.executeUpdate();
             }
 
-            conn.commit(); // Commit transaction
+            conn.commit();
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error confirming booking ID=" + bookingId, e);
             throw e;
         }
     }
 
-    public double calculateTotalPrice(int roomId, String checkIn, String checkOut) throws SQLException {
+    public BigDecimal calculateTotalPrice(int roomId, String checkIn, String checkOut) throws SQLException {
         String query = "SELECT price_per_night FROM Rooms WHERE room_id = ?";
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, roomId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                double pricePerNight = rs.getDouble("price_per_night");
+                BigDecimal pricePerNight = rs.getBigDecimal("price_per_night");
                 long diffInMillies = Math.abs(new SimpleDateFormat("yyyy-MM-dd").parse(checkOut).getTime() - new SimpleDateFormat("yyyy-MM-dd").parse(checkIn).getTime());
                 long nights = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
-                return pricePerNight * nights;
+                return pricePerNight.multiply(BigDecimal.valueOf(nights));
             }
-            return 0;
+            return BigDecimal.ZERO;
         } catch (Exception e) {
             throw new SQLException("Error calculating total price", e);
         }
@@ -306,27 +302,12 @@ public class UserBookingService {
             stmt.setDate(3, new java.sql.Date(checkInDate.getTime()));
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return rs.getInt(1) == 0; // Trả về true nếu không có lịch trùng
+                return rs.getInt(1) == 0;
             }
             return true;
         }
     }
 
-//    public void saveBooking(Booking booking) throws SQLException {
-//        String query = "INSERT INTO Bookings (user_id, room_id, check_in_date, check_out_date, num_adults, num_children, total_price, status) "
-//                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-//        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
-//            stmt.setInt(1, booking.getUserId());
-//            stmt.setInt(2, booking.getRoomId());
-//            stmt.setDate(3, new java.sql.Date(booking.getCheckInDate().getTime()));
-//            stmt.setDate(4, new java.sql.Date(booking.getCheckOutDate().getTime()));
-//            stmt.setInt(5, booking.getAdults());
-//            stmt.setInt(6, booking.getChildren());
-//            stmt.setDouble(7, booking.getTotalPrice());
-//            stmt.setString(8, booking.getStatus());
-//            stmt.executeUpdate();
-//        }
-//    }
     public void saveBooking(Booking booking) throws SQLException {
         if (!isRoomAvailable(booking.getRoomId(), booking.getCheckInDate(), booking.getCheckOutDate())) {
             throw new SQLException("Room is not available for the selected dates.");
@@ -339,13 +320,12 @@ public class UserBookingService {
             stmt.setInt(2, booking.getRoomId());
             stmt.setDate(3, new java.sql.Date(booking.getCheckInDate().getTime()));
             stmt.setDate(4, new java.sql.Date(booking.getCheckOutDate().getTime()));
-            stmt.setInt(5, booking.getAdults());
-            stmt.setInt(6, booking.getChildren());
-            stmt.setDouble(7, booking.getTotalPrice());
+            stmt.setInt(5, booking.getNumAdults());
+            stmt.setInt(6, booking.getNumChildren());
+            stmt.setBigDecimal(7, booking.getTotalPrice());
             stmt.setString(8, booking.getStatus());
             stmt.executeUpdate();
             LOGGER.info("Booking saved for roomId=" + booking.getRoomId());
         }
     }
-
 }

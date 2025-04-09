@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -35,13 +36,13 @@ public class AdminReportController extends HttpServlet {
             Date startDate = startDateStr != null && !startDateStr.isEmpty() ? sdf.parse(startDateStr) : null;
             Date endDate = endDateStr != null && !endDateStr.isEmpty() ? sdf.parse(endDateStr) : null;
 
-            double totalRevenue = reportService.getRevenue(reportType, startDate, endDate);
+            BigDecimal totalRevenue = reportService.getRevenue(reportType, startDate, endDate); // Đổi từ double sang BigDecimal
             int totalRooms = reportService.getTotalRooms();
             int availableRooms = reportService.getAvailableRooms();
             int confirmedBookings = reportService.getConfirmedBookings(reportType, startDate, endDate);
             double utilizationRate = totalRooms > 0 ? (double) (totalRooms - availableRooms) / totalRooms * 100 : 0;
 
-            request.setAttribute("totalRevenue", String.format("%.2f", totalRevenue));
+            request.setAttribute("totalRevenue", totalRevenue); // Định dạng 2 chữ số
             request.setAttribute("totalRooms", totalRooms);
             request.setAttribute("availableRooms", availableRooms);
             request.setAttribute("confirmedBookings", confirmedBookings);

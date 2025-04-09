@@ -1,17 +1,18 @@
 package com.mycompany.oceanichotel.models;
 
-import java.util.Date;
+import java.sql.Timestamp;
 
 public class BookingHistory {
+
     private int historyId;
     private int bookingId;
     private int changedBy;
     private String oldStatus;
     private String newStatus;
-    private Date changedAt;
+    private Timestamp changedAt;
 
-    // Constructors
-    public BookingHistory() {}
+    public BookingHistory() {
+    }
 
     public BookingHistory(int bookingId, int changedBy, String oldStatus, String newStatus) {
         this.bookingId = bookingId;
@@ -50,7 +51,13 @@ public class BookingHistory {
     }
 
     public void setOldStatus(String oldStatus) {
-        this.oldStatus = oldStatus;
+        if (oldStatus == null) {
+            this.oldStatus = null;
+        } else if (oldStatus.equals("Pending") || oldStatus.equals("Confirmed") || oldStatus.equals("Cancelled")) {
+            this.oldStatus = oldStatus;
+        } else {
+            throw new IllegalArgumentException("Old status must be 'Pending', 'Confirmed', or 'Cancelled'");
+        }
     }
 
     public String getNewStatus() {
@@ -58,14 +65,18 @@ public class BookingHistory {
     }
 
     public void setNewStatus(String newStatus) {
-        this.newStatus = newStatus;
+        if (newStatus != null && (newStatus.equals("Pending") || newStatus.equals("Confirmed") || newStatus.equals("Cancelled"))) {
+            this.newStatus = newStatus;
+        } else {
+            throw new IllegalArgumentException("New status must be 'Pending', 'Confirmed', or 'Cancelled'");
+        }
     }
 
-    public Date getChangedAt() {
+    public Timestamp getChangedAt() {
         return changedAt;
     }
 
-    public void setChangedAt(Date changedAt) {
+    public void setChangedAt(Timestamp changedAt) {
         this.changedAt = changedAt;
     }
 }

@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -95,29 +96,26 @@ public class UserBookingController extends HttpServlet {
 
             Date checkInDate = DATE_FORMAT.parse(checkInDateStr);
             Date checkOutDate = DATE_FORMAT.parse(checkOutDateStr);
-            int adults = Integer.parseInt(adultsStr);
-            int children = Integer.parseInt(childrenStr);
+            int numAdults = Integer.parseInt(adultsStr);
+            int numChildren = Integer.parseInt(childrenStr);
 
-            // Kiểm tra logic
             if (checkOutDate.before(checkInDate)) {
                 request.setAttribute("error", "Ngày trả phòng phải sau ngày nhận phòng.");
                 request.setAttribute("room", room);
                 request.getRequestDispatcher("/WEB-INF/views/user/book_room.jsp").forward(request, response);
                 return;
             }
-            if (adults + children > room.getMaxAdults() + room.getMaxChildren()) {
+            if (numAdults + numChildren > room.getMaxAdults() + room.getMaxChildren()) {
                 request.setAttribute("error", "Số người vượt quá sức chứa tối đa của phòng.");
                 request.setAttribute("room", room);
                 request.getRequestDispatcher("/WEB-INF/views/user/book_room.jsp").forward(request, response);
                 return;
             }
 
-            // Tính tổng giá
             long diffInMillies = checkOutDate.getTime() - checkInDate.getTime();
             int days = (int) (diffInMillies / (1000 * 60 * 60 * 24));
-            double totalPrice = days * room.getPricePerNight();
+            BigDecimal totalPrice = room.getPricePerNight().multiply(new BigDecimal(days));
 
-            // Tạo và lưu đặt phòng
             Booking booking = new Booking();
             booking.setUserId(user.getUserId());
             booking.setRoomId(roomId);
@@ -125,8 +123,8 @@ public class UserBookingController extends HttpServlet {
             booking.setCheckOutDate(checkOutDate);
             booking.setTotalPrice(totalPrice);
             booking.setStatus("Pending");
-            booking.setAdults(adults);
-            booking.setChildren(children);
+            booking.setNumAdults(numAdults);
+            booking.setNumChildren(numChildren);
 
             userRoomService.bookRoom(booking);
             LOGGER.info("Booking created successfully for roomId=" + roomId + ", userId=" + user.getUserId());

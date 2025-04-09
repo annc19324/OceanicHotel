@@ -16,7 +16,6 @@ public class AdminUserService {
 
     private static final int PAGE_SIZE = 10;
     private static final Logger LOGGER = Logger.getLogger(AdminUserService.class.getName());
-    private SecurityUtil securityUtil;
 
     public boolean isUsernameExists(String username, Integer excludeUserId) throws SQLException {
         String query = "SELECT COUNT(*) FROM Users WHERE username = ? AND (user_id != ? OR ? IS NULL)";
@@ -72,8 +71,15 @@ public class AdminUserService {
                 user.setUserId(rs.getInt("user_id"));
                 user.setUsername(rs.getString("username"));
                 user.setEmail(rs.getString("email"));
-                user.setPassword(rs.getString("password")); // Lưu ý: Trong thực tế, mật khẩu nên được mã hóa
+                user.setPassword(rs.getString("password"));
                 user.setRole(rs.getString("role"));
+                user.setCccd(rs.getString("cccd"));
+                user.setFullName(rs.getString("full_name"));
+                user.setPhoneNumber(rs.getString("phone_number"));
+                user.setDateOfBirth(rs.getDate("date_of_birth"));
+                user.setGender(rs.getString("gender"));
+                user.setAvatar(rs.getString("avatar"));
+                user.setActive(rs.getBoolean("is_active"));
                 user.setCreatedAt(rs.getTimestamp("created_at"));
                 users.add(user);
             }
@@ -110,6 +116,13 @@ public class AdminUserService {
                 user.setEmail(rs.getString("email"));
                 user.setPassword(rs.getString("password"));
                 user.setRole(rs.getString("role"));
+                user.setCccd(rs.getString("cccd"));
+                user.setFullName(rs.getString("full_name"));
+                user.setPhoneNumber(rs.getString("phone_number"));
+                user.setDateOfBirth(rs.getDate("date_of_birth"));
+                user.setGender(rs.getString("gender"));
+                user.setAvatar(rs.getString("avatar"));
+                user.setActive(rs.getBoolean("is_active"));
                 user.setCreatedAt(rs.getTimestamp("created_at"));
                 return user;
             }
@@ -124,13 +137,22 @@ public class AdminUserService {
         if (isEmailExists(user.getEmail(), null)) {
             throw new SQLException("Email already exists: " + user.getEmail());
         }
-        String query = "INSERT INTO Users (username, email, password, role, created_at) VALUES (?, ?, ?, ?, GETDATE())";
+        if (user.getDateOfBirth() == null) {
+            throw new SQLException("Date of birth is required!");
+        }
+
+        String query = "INSERT INTO Users (username, email, password, role, full_name, cccd, phone_number, date_of_birth, gender, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE())";
         String hashedPassword = SecurityUtil.hashPassword(user.getPassword());
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, user.getUsername());
             stmt.setString(2, user.getEmail());
-            stmt.setString(3, hashedPassword); // Nên mã hóa mật khẩu trong thực tế
+            stmt.setString(3, hashedPassword);
             stmt.setString(4, user.getRole());
+            stmt.setString(5, user.getFullName());
+            stmt.setString(6, user.getCccd());
+            stmt.setString(7, user.getPhoneNumber());
+            stmt.setDate(8, new java.sql.Date(user.getDateOfBirth().getTime()));
+            stmt.setString(9, user.getGender());
             stmt.executeUpdate();
         }
     }
@@ -142,10 +164,14 @@ public class AdminUserService {
         if (isEmailExists(user.getEmail(), user.getUserId())) {
             throw new SQLException("Email already exists: " + user.getEmail());
         }
-        String hashedPassword = SecurityUtil.hashPassword(user.getPassword());
-        String query = "UPDATE Users SET username = ?, email = ?, role = ?" + 
-                      (user.getPassword() != null ? ", password = ?" : "") + 
-                      " WHERE user_id = ?";
+        if (user.getDateOfBirth() == null) {
+            throw new SQLException("Date of birth is required!");
+        }
+
+        String query = "UPDATE Users SET username = ?, email = ?, role = ?" +
+                       (user.getPassword() != null ? ", password = ?" : "") +
+                       ", full_name = ?, cccd = ?, phone_number = ?, date_of_birth = ?, gender = ?, is_active = ? WHERE user_id = ?";
+        String hashedPassword = user.getPassword() != null ? SecurityUtil.hashPassword(user.getPassword()) : null;
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, user.getUsername());
             stmt.setString(2, user.getEmail());
@@ -154,16 +180,54 @@ public class AdminUserService {
             if (user.getPassword() != null) {
                 stmt.setString(paramIndex++, hashedPassword);
             }
+            stmt.setString(paramIndex++, user.getFullName());
+            stmt.setString(paramIndex++, user.getCccd());
+            stmt.setString(paramIndex++, user.getPhoneNumber());
+            stmt.setDate(paramIndex++, new java.sql.Date(user.getDateOfBirth().getTime()));
+            stmt.setString(paramIndex++, user.getGender());
+            stmt.setBoolean(paramIndex++, user.isActive());
             stmt.setInt(paramIndex, user.getUserId());
             stmt.executeUpdate();
         }
     }
 
     public void deleteUser(int userId) throws SQLException {
-        String query = "DELETE FROM Users WHERE user_id = ?";
-        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, userId);
-            stmt.executeUpdate();
+        Connection conn = null;
+        try {
+            conn = DatabaseUtil.getConnection();
+            conn.setAutoCommit(false);
+
+            String deleteLoginHistoryQuery = "DELETE FROM Login_History WHERE user_id = ?";
+            try (PreparedStatement stmtLogin = conn.prepareStatement(deleteLoginHistoryQuery)) {
+                stmtLogin.setInt(1, userId);
+                stmtLogin.executeUpdate();
+            }
+
+            String deleteUserQuery = "DELETE FROM Users WHERE user_id = ?";
+            try (PreparedStatement stmtUser = conn.prepareStatement(deleteUserQuery)) {
+                stmtUser.setInt(1, userId);
+                stmtUser.executeUpdate();
+            }
+
+            conn.commit();
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackEx) {
+                    LOGGER.log(Level.SEVERE, "Rollback failed", rollbackEx);
+                }
+            }
+            throw e;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException closeEx) {
+                    LOGGER.log(Level.SEVERE, "Failed to close connection", closeEx);
+                }
+            }
         }
     }
 }

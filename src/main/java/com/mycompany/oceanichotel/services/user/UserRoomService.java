@@ -7,6 +7,7 @@ import com.mycompany.oceanichotel.models.RoomType;
 import com.mycompany.oceanichotel.services.admin.AdminRoomTypeService;
 import com.mycompany.oceanichotel.utils.DatabaseUtil;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -105,7 +106,7 @@ public class UserRoomService {
         Room room = new Room();
         room.setRoomId(rs.getInt("room_id"));
         room.setRoomNumber(rs.getString("room_number"));
-        room.setPricePerNight(rs.getDouble("price_per_night"));
+        room.setPricePerNight(rs.getBigDecimal("price_per_night")); // Đổi từ getDouble sang getBigDecimal
         room.setMaxAdults(rs.getInt("max_adults"));
         room.setMaxChildren(rs.getInt("max_children"));
         room.setDescription(rs.getString("description"));
@@ -141,10 +142,10 @@ public class UserRoomService {
             stmtBooking.setInt(2, booking.getRoomId());
             stmtBooking.setDate(3, new java.sql.Date(booking.getCheckInDate().getTime()));
             stmtBooking.setDate(4, new java.sql.Date(booking.getCheckOutDate().getTime()));
-            stmtBooking.setDouble(5, booking.getTotalPrice());
+            stmtBooking.setBigDecimal(5, booking.getTotalPrice()); // Đổi từ setDouble sang setBigDecimal
             stmtBooking.setString(6, booking.getStatus());
-            stmtBooking.setInt(7, booking.getAdults());    // Sửa thành num_adults
-            stmtBooking.setInt(8, booking.getChildren());  // Sửa thành num_children
+            stmtBooking.setInt(7, booking.getNumAdults());    // Đổi từ getAdults sang getNumAdults
+            stmtBooking.setInt(8, booking.getNumChildren());  // Đổi từ getChildren sang getNumChildren
             int rowsAffected = stmtBooking.executeUpdate();
             LOGGER.info("Inserted into Bookings, rows affected: " + rowsAffected);
 
@@ -235,10 +236,10 @@ public class UserRoomService {
                     booking.setRoomId(rs.getInt("room_id"));
                     booking.setCheckInDate(rs.getDate("check_in_date"));
                     booking.setCheckOutDate(rs.getDate("check_out_date"));
-                    booking.setTotalPrice(rs.getDouble("total_price"));
+                    booking.setTotalPrice(rs.getBigDecimal("total_price")); // Đổi từ getDouble sang getBigDecimal
                     booking.setStatus(rs.getString("status"));
-                    booking.setAdults(rs.getInt("num_adults"));    // Sửa thành num_adults
-                    booking.setChildren(rs.getInt("num_children")); // Sửa thành num_children
+                    booking.setNumAdults(rs.getInt("num_adults"));    // Đổi từ setAdults sang setNumAdults
+                    booking.setNumChildren(rs.getInt("num_children")); // Đổi từ setChildren sang setNumChildren
                     Room room = new Room();
                     room.setRoomNumber(rs.getString("room_number"));
                     RoomType roomType = new RoomType();
@@ -304,7 +305,6 @@ public class UserRoomService {
             conn.setAutoCommit(false);
             LOGGER.info("Starting transaction to cancel bookingId=" + bookingId);
 
-            // 1. Kiểm tra đặt phòng có thể hủy không
             String checkQuery = "SELECT status, check_in_date, room_id FROM Bookings WHERE booking_id = ? AND user_id = ?";
             try (PreparedStatement checkStmt = conn.prepareStatement(checkQuery)) {
                 checkStmt.setInt(1, bookingId);
@@ -322,7 +322,6 @@ public class UserRoomService {
                     throw new SQLException("Booking cannot be cancelled: status=" + status + ", hours until check-in=" + hoursUntilCheckIn);
                 }
 
-                // 2. Cập nhật trạng thái booking
                 String updateBookingQuery = "UPDATE Bookings SET status = 'Cancelled' WHERE booking_id = ?";
                 stmtBooking = conn.prepareStatement(updateBookingQuery);
                 stmtBooking.setInt(1, bookingId);
@@ -332,7 +331,6 @@ public class UserRoomService {
                     throw new SQLException("Failed to update booking status for bookingId=" + bookingId);
                 }
 
-                // 3. Cập nhật trạng thái phòng
                 String updateRoomQuery = "UPDATE Rooms SET is_available = 1 WHERE room_id = ?";
                 stmtRoom = conn.prepareStatement(updateRoomQuery);
                 stmtRoom.setInt(1, roomId);
@@ -342,7 +340,6 @@ public class UserRoomService {
                     throw new SQLException("Failed to update room availability for roomId=" + roomId);
                 }
 
-                // 4. Ghi lịch sử thay đổi trạng thái
                 String insertHistoryQuery = "INSERT INTO Booking_History (booking_id, changed_by, old_status, new_status) VALUES (?, ?, ?, ?)";
                 stmtHistory = conn.prepareStatement(insertHistoryQuery);
                 stmtHistory.setInt(1, bookingId);

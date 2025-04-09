@@ -9,8 +9,10 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.URLEncoder;
 import java.sql.SQLException;
-import java.util.ArrayList; // Thêm import này
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -94,7 +96,7 @@ public class AdminRoomController extends HttpServlet {
                 }
                 room.setRoomType(roomType);
 
-                room.setPricePerNight(Double.parseDouble(request.getParameter("pricePerNight")));
+                room.setPricePerNight(new BigDecimal(request.getParameter("pricePerNight")));
                 room.setAvailable("true".equals(request.getParameter("isAvailable")));
                 room.setDescription(request.getParameter("description"));
                 room.setMaxAdults(Integer.parseInt(request.getParameter("maxAdults")));
@@ -119,7 +121,7 @@ public class AdminRoomController extends HttpServlet {
                 }
                 room.setRoomType(roomType);
 
-                room.setPricePerNight(Double.parseDouble(request.getParameter("pricePerNight")));
+                room.setPricePerNight(new BigDecimal(request.getParameter("pricePerNight")));
                 room.setAvailable("true".equals(request.getParameter("isAvailable")));
                 room.setDescription(request.getParameter("description"));
                 room.setMaxAdults(Integer.parseInt(request.getParameter("maxAdults")));
@@ -129,8 +131,17 @@ public class AdminRoomController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/admin/rooms?message=update_success");
             } else if (pathInfo.equals("/delete")) {
                 int roomId = Integer.parseInt(request.getParameter("roomId"));
-                roomService.deleteRoom(roomId);
-                response.sendRedirect(request.getContextPath() + "/admin/rooms?message=delete_success");
+                try {
+                    roomService.deleteRoom(roomId); // Có thể ném SQLException
+                    response.sendRedirect(request.getContextPath() + "/admin/rooms?message=delete_success");
+                } catch (SQLException e) {
+                    LOGGER.log(Level.WARNING, "Failed to delete room", e);
+                    String errorMsg = language.equals("vi")
+                            ? (e.getMessage().contains("occupied") ? "Không thể xóa phòng vì phòng đang được sử dụng."
+                            : "Không thể xóa phòng vì có " + e.getMessage().split("has ")[1] + " đang đặt.")
+                            : e.getMessage();
+                    response.sendRedirect(request.getContextPath() + "/admin/rooms?error=" + URLEncoder.encode(errorMsg, "UTF-8"));
+                }
             }
         } catch (IllegalArgumentException e) {
             LOGGER.log(Level.WARNING, "Invalid input in doPost", e);
@@ -149,14 +160,14 @@ public class AdminRoomController extends HttpServlet {
             roomTypes = roomService.getAllRoomTypes();
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Failed to retrieve room types", e);
-            roomTypes = new ArrayList<>(); // Trả về danh sách rỗng nếu lỗi
+            roomTypes = new ArrayList<>();
         }
         request.setAttribute("roomTypes", roomTypes);
 
         if (pathInfo.equals("/add")) {
             Room room = new Room();
             room.setRoomNumber(request.getParameter("roomNumber"));
-            room.setPricePerNight(parseDoubleOrDefault(request.getParameter("pricePerNight"), 0.0));
+            room.setPricePerNight(parseBigDecimalOrDefault(request.getParameter("pricePerNight"), BigDecimal.ZERO));
             room.setAvailable("true".equals(request.getParameter("isAvailable")));
             room.setDescription(request.getParameter("description"));
             room.setMaxAdults(parseIntOrDefault(request.getParameter("maxAdults"), 0));
@@ -166,7 +177,6 @@ public class AdminRoomController extends HttpServlet {
                 RoomType roomType = roomService.getRoomTypeById(typeId);
                 room.setRoomType(roomType);
             } catch (NumberFormatException | SQLException ignored) {
-                // Không gán RoomType nếu lỗi
             }
             request.setAttribute("room", room);
             request.getRequestDispatcher("/WEB-INF/views/admin/add_room.jsp").forward(request, response);
@@ -177,7 +187,7 @@ public class AdminRoomController extends HttpServlet {
                 room = roomService.getRoomById(roomId);
                 if (room != null) {
                     room.setRoomNumber(request.getParameter("roomNumber"));
-                    room.setPricePerNight(parseDoubleOrDefault(request.getParameter("pricePerNight"), room.getPricePerNight()));
+                    room.setPricePerNight(parseBigDecimalOrDefault(request.getParameter("pricePerNight"), room.getPricePerNight()));
                     room.setAvailable("true".equals(request.getParameter("isAvailable")));
                     room.setDescription(request.getParameter("description"));
                     room.setMaxAdults(parseIntOrDefault(request.getParameter("maxAdults"), room.getMaxAdults()));
@@ -205,10 +215,10 @@ public class AdminRoomController extends HttpServlet {
         }
     }
 
-    private double parseDoubleOrDefault(String value, double defaultValue) {
+    private BigDecimal parseBigDecimalOrDefault(String value, BigDecimal defaultValue) {
         try {
-            return Double.parseDouble(value);
-        } catch (NumberFormatException e) {
+            return new BigDecimal(value);
+        } catch (NumberFormatException | NullPointerException e) {
             return defaultValue;
         }
     }

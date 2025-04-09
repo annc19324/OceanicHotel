@@ -9,9 +9,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
-import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @WebServlet("/admin/users/*")
 public class AdminUserController extends HttpServlet {
@@ -76,8 +78,76 @@ public class AdminUserController extends HttpServlet {
                 User user = new User();
                 user.setUsername(request.getParameter("username"));
                 user.setEmail(request.getParameter("email"));
-                user.setPassword(request.getParameter("password")); // Nên mã hóa mật khẩu trong thực tế
+                user.setPassword(request.getParameter("password"));
+                user.setFullName(request.getParameter("full_name"));
                 user.setRole(request.getParameter("role"));
+                user.setCccd(request.getParameter("cccd"));
+                user.setPhoneNumber(request.getParameter("phone_number"));
+
+                String dobDay = request.getParameter("dob_day");
+                String dobMonth = request.getParameter("dob_month");
+                String dobYear = request.getParameter("dob_year");
+
+                if (dobDay == null || dobMonth == null || dobYear == null || 
+                    dobDay.isEmpty() || dobMonth.isEmpty() || dobYear.isEmpty()) {
+                    request.setAttribute("error", language.equals("vi") ? "Vui lòng chọn đầy đủ ngày sinh!" : "Please select full date of birth!");
+                    request.getRequestDispatcher("/WEB-INF/views/admin/add_user.jsp").forward(request, response);
+                    return;
+                }
+
+                int day, month, year;
+                try {
+                    day = Integer.parseInt(dobDay);
+                    month = Integer.parseInt(dobMonth);
+                    year = Integer.parseInt(dobYear);
+                } catch (NumberFormatException e) {
+                    LOGGER.log(Level.WARNING, "Invalid date components: day=" + dobDay + ", month=" + dobMonth + ", year=" + dobYear, e);
+                    request.setAttribute("error", language.equals("vi") ? "Ngày sinh không hợp lệ!" : "Invalid date of birth!");
+                    request.getRequestDispatcher("/WEB-INF/views/admin/add_user.jsp").forward(request, response);
+                    return;
+                }
+
+                Calendar dobCal = Calendar.getInstance();
+                dobCal.setLenient(false); // Không cho phép ngày không hợp lệ (như 31/02)
+                try {
+                    dobCal.set(year, month - 1, day);
+                    Date dob = dobCal.getTime();
+                    user.setDateOfBirth(dob);
+                } catch (IllegalArgumentException e) {
+                    LOGGER.log(Level.WARNING, "Invalid date: " + year + "-" + month + "-" + day, e);
+                    request.setAttribute("error", language.equals("vi") ? "Ngày sinh không hợp lệ (ví dụ: 31/02)!" : "Invalid date of birth (e.g., 31/02)!");
+                    request.getRequestDispatcher("/WEB-INF/views/admin/add_user.jsp").forward(request, response);
+                    return;
+                }
+
+                Date now = new Date();
+                Calendar nowCal = Calendar.getInstance();
+                nowCal.setTime(now);
+                int age = nowCal.get(Calendar.YEAR) - dobCal.get(Calendar.YEAR);
+                if (nowCal.get(Calendar.DAY_OF_YEAR) < dobCal.get(Calendar.DAY_OF_YEAR)) {
+                    age--;
+                }
+
+                if (dobCal.getTime().after(now) || dobCal.getTime().equals(now)) {
+                    request.setAttribute("error", language.equals("vi") ? "Ngày sinh không thể là hôm nay hoặc tương lai!" : "Date of birth cannot be today or future!");
+                    request.getRequestDispatcher("/WEB-INF/views/admin/add_user.jsp").forward(request, response);
+                    return;
+                }
+                if (age < 16) {
+                    request.setAttribute("error", language.equals("vi") ? "Người dùng phải trên 16 tuổi!" : "User must be over 16 years old!");
+                    request.getRequestDispatcher("/WEB-INF/views/admin/add_user.jsp").forward(request, response);
+                    return;
+                }
+
+                user.setGender(request.getParameter("gender"));
+
+                String fullName = request.getParameter("full_name");
+                if (fullName == null || fullName.trim().isEmpty()) {
+                    request.setAttribute("error", language.equals("vi") ? "Vui lòng nhập họ và tên!" : "Please enter full name!");
+                    request.getRequestDispatcher("/WEB-INF/views/admin/add_user.jsp").forward(request, response);
+                    return;
+                }
+
                 try {
                     userService.addUser(user);
                     response.sendRedirect(request.getContextPath() + "/admin/users?message=add_success");
@@ -93,15 +163,85 @@ public class AdminUserController extends HttpServlet {
                 }
             } else if (pathInfo.equals("/update")) {
                 int userId = Integer.parseInt(request.getParameter("userId"));
-                User user = new User();
-                user.setUserId(userId);
+                User user = userService.getUserById(userId);
+                if (user == null) {
+                    response.sendRedirect(request.getContextPath() + "/admin/users?error=user_not_found");
+                    return;
+                }
                 user.setUsername(request.getParameter("username"));
                 user.setEmail(request.getParameter("email"));
                 String password = request.getParameter("password");
                 if (password != null && !password.isEmpty()) {
-                    user.setPassword(password); // Nên mã hóa mật khẩu trong thực tế
+                    user.setPassword(password);
                 }
+                user.setFullName(request.getParameter("full_name"));
                 user.setRole(request.getParameter("role"));
+                user.setCccd(request.getParameter("cccd"));
+                user.setPhoneNumber(request.getParameter("phone_number"));
+
+                String dobDay = request.getParameter("dob_day");
+                String dobMonth = request.getParameter("dob_month");
+                String dobYear = request.getParameter("dob_year");
+
+                if (dobDay == null || dobMonth == null || dobYear == null || 
+                    dobDay.isEmpty() || dobMonth.isEmpty() || dobYear.isEmpty()) {
+                    request.setAttribute("error", language.equals("vi") ? "Vui lòng chọn đầy đủ ngày sinh!" : "Please select full date of birth!");
+                    request.setAttribute("user", user);
+                    request.getRequestDispatcher("/WEB-INF/views/admin/edit_user.jsp").forward(request, response);
+                    return;
+                }
+
+                int day, month, year;
+                try {
+                    day = Integer.parseInt(dobDay);
+                    month = Integer.parseInt(dobMonth);
+                    year = Integer.parseInt(dobYear);
+                } catch (NumberFormatException e) {
+                    LOGGER.log(Level.WARNING, "Invalid date components: day=" + dobDay + ", month=" + dobMonth + ", year=" + dobYear, e);
+                    request.setAttribute("error", language.equals("vi") ? "Ngày sinh không hợp lệ!" : "Invalid date of birth!");
+                    request.setAttribute("user", user);
+                    request.getRequestDispatcher("/WEB-INF/views/admin/edit_user.jsp").forward(request, response);
+                    return;
+                }
+
+                Calendar dobCal = Calendar.getInstance();
+                dobCal.setLenient(false);
+                try {
+                    dobCal.set(year, month - 1, day);
+                    Date dob = dobCal.getTime();
+                    user.setDateOfBirth(dob);
+                } catch (IllegalArgumentException e) {
+                    LOGGER.log(Level.WARNING, "Invalid date: " + year + "-" + month + "-" + day, e);
+                    request.setAttribute("error", language.equals("vi") ? "Ngày sinh không hợp lệ (ví dụ: 31/02)!" : "Invalid date of birth (e.g., 31/02)!");
+                    request.setAttribute("user", user);
+                    request.getRequestDispatcher("/WEB-INF/views/admin/edit_user.jsp").forward(request, response);
+                    return;
+                }
+
+                Date now = new Date();
+                Calendar nowCal = Calendar.getInstance();
+                nowCal.setTime(now);
+                int age = nowCal.get(Calendar.YEAR) - dobCal.get(Calendar.YEAR);
+                if (nowCal.get(Calendar.DAY_OF_YEAR) < dobCal.get(Calendar.DAY_OF_YEAR)) {
+                    age--;
+                }
+
+                if (dobCal.getTime().after(now) || dobCal.getTime().equals(now)) {
+                    request.setAttribute("error", language.equals("vi") ? "Ngày sinh không thể là hôm nay hoặc tương lai!" : "Date of birth cannot be today or future!");
+                    request.setAttribute("user", user);
+                    request.getRequestDispatcher("/WEB-INF/views/admin/edit_user.jsp").forward(request, response);
+                    return;
+                }
+                if (age < 16) {
+                    request.setAttribute("error", language.equals("vi") ? "Người dùng phải trên 16 tuổi!" : "User must be over 16 years old!");
+                    request.setAttribute("user", user);
+                    request.getRequestDispatcher("/WEB-INF/views/admin/edit_user.jsp").forward(request, response);
+                    return;
+                }
+
+                user.setGender(request.getParameter("gender"));
+                user.setActive("1".equals(request.getParameter("is_active")));
+
                 try {
                     userService.updateUser(user);
                     response.sendRedirect(request.getContextPath() + "/admin/users?message=update_success");

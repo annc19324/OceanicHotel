@@ -1,0 +1,898 @@
+user_controller
+
+package com.mycompany.oceanichotel.controllers.user;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.annotation.WebServlet;
+
+import java.io.IOException;
+
+@WebServlet("/get-error")
+public class ErrorHandlerServlet extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        String error = (session != null && session.getAttribute("error") != null)
+                ? (String) session.getAttribute("error")
+                : "";
+        if (session != null) {
+            session.removeAttribute("error");
+        }
+        response.setContentType("text/plain");
+        response.getWriter().write(error);
+    }
+}
+
+package com.mycompany.oceanichotel.controllers.user;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+@WebServlet("/index")
+public class IndexServlet extends HttpServlet {
+    private static final Logger logger = LoggerFactory.getLogger(IndexServlet.class);
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        logger.info("Handling request for URL: {}", request.getRequestURI());
+        logger.info("Forwarding to login.jsp");
+        request.getRequestDispatcher("/WEB-INF/views/public/login.jsp").forward(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        doGet(request, response);
+    }
+}
+
+package com.mycompany.oceanichotel.controllers.user;
+
+import com.mycompany.oceanichotel.models.User;
+import com.mycompany.oceanichotel.services.user.UserService;
+import com.mycompany.oceanichotel.utils.DatabaseUtil;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+@WebServlet("/login")
+public class LoginController extends HttpServlet {
+
+    private UserService userService;
+
+    @Override
+    public void init() throws ServletException {
+        userService = new UserService();
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.getRequestDispatcher("/WEB-INF/views/public/login.jsp").forward(req, resp);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String username = req.getParameter("username");
+        String password = req.getParameter("password");
+
+        try {
+            User user = userService.loginUser(username, password);
+            if (user != null) {
+                HttpSession session = req.getSession();
+                session.setAttribute("user", user);
+
+                String ipAddress = req.getRemoteAddr();
+                try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(
+                        "INSERT INTO Login_History (user_id, ip_address) VALUES (?, ?)")) {
+                    stmt.setInt(1, user.getUserId());
+                    stmt.setString(2, ipAddress);
+                    stmt.executeUpdate();
+                } catch (SQLException e) {
+                    throw new ServletException("Error logging login history", e);
+                }
+
+                if ("admin".equals(user.getRole())) {
+                    resp.sendRedirect(req.getContextPath() + "/admin/dashboard");
+                } else {
+                    resp.sendRedirect(req.getContextPath() + "/user/dashboard");
+                    
+                }
+
+            } else {
+                req.setAttribute("error", "Invalid username or password");
+                req.getRequestDispatcher("/WEB-INF/views/public/login.jsp").forward(req, resp);
+            }
+        } catch (SQLException e) {
+            throw new ServletException("Database error", e);
+        }
+    }
+}
+
+
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package com.mycompany.oceanichotel.controllers.user;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import java.io.IOException;
+/**
+ *
+ * @author annc1
+ */
+@WebServlet("/logout")
+public class LogoutController extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        HttpSession session = req.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        resp.sendRedirect(req.getContextPath() + "/login");
+    }
+}
+
+
+package com.mycompany.oceanichotel.controllers.user;
+
+import com.mycompany.oceanichotel.models.User;
+import com.mycompany.oceanichotel.services.user.UserService;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.sql.SQLException;
+
+@WebServlet("/register")
+public class RegisterController extends HttpServlet {
+    private UserService userService;
+
+    @Override
+    public void init() throws ServletException {
+        userService = new UserService();
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.getRequestDispatcher("/WEB-INF/views/public/register.jsp").forward(req, resp);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String username = req.getParameter("username");
+        String email = req.getParameter("email");
+        String password = req.getParameter("password");
+
+        User user = new User(username, password, email);
+        try {
+            userService.registerUser(user);
+            resp.sendRedirect(req.getContextPath() + "/login"); // Đã đúng: chuyển đến login
+        } catch (SQLException e) {
+            req.setAttribute("error", e.getMessage());
+            req.getRequestDispatcher("/WEB-INF/views/public/register.jsp").forward(req, resp);
+        }
+    }
+}
+
+package com.mycompany.oceanichotel.controllers.user;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.annotation.WebServlet;
+
+import java.io.IOException;
+
+@WebServlet("/settings")
+public class SettingsServlet extends HttpServlet {
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        
+        String language = request.getParameter("language");
+        if (language != null && (language.equals("en") || language.equals("vi"))) {
+            session.setAttribute("language", language);
+        }
+
+        String theme = request.getParameter("theme");
+        if (theme != null && (theme.equals("light") || theme.equals("dark"))) {
+            session.setAttribute("theme", theme);
+        }
+
+        String referer = request.getHeader("Referer");
+        response.sendRedirect(referer != null ? referer : request.getContextPath() + "/admin/users");
+    }
+}
+
+package com.mycompany.oceanichotel.controllers.user;
+
+import com.mycompany.oceanichotel.models.Booking;
+import com.mycompany.oceanichotel.models.Room;
+import com.mycompany.oceanichotel.models.User;
+import com.mycompany.oceanichotel.services.user.UserRoomService;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
+@WebServlet("/user/book-room")
+public class UserBookingController extends HttpServlet {
+    private UserRoomService userRoomService;
+    private static final Logger LOGGER = Logger.getLogger(UserBookingController.class.getName());
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+
+    @Override
+    public void init() throws ServletException {
+        userRoomService = new UserRoomService();
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        User user = (User) request.getSession().getAttribute("user");
+        if (user == null || !"user".equals(user.getRole())) {
+            LOGGER.info("User not logged in or not authorized, redirecting to login.");
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        String roomIdStr = request.getParameter("roomId");
+        if (roomIdStr == null || roomIdStr.trim().isEmpty()) {
+            LOGGER.warning("Room ID is missing in booking request.");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Room ID is required.");
+            return;
+        }
+
+        try {
+            int roomId = Integer.parseInt(roomIdStr);
+            Room room = userRoomService.getRoomById(roomId);
+            if (room == null || !room.isAvailable()) {
+                LOGGER.warning("Room not found or not available for booking: " + roomId);
+                request.setAttribute("error", "Phòng không tồn tại hoặc đã được đặt.");
+                request.getRequestDispatcher("/WEB-INF/views/user/room_details.jsp").forward(request, response);
+                return;
+            }
+
+            request.setAttribute("room", room);
+            request.getRequestDispatcher("/WEB-INF/views/user/book_room.jsp").forward(request, response);
+        } catch (NumberFormatException e) {
+            LOGGER.log(Level.WARNING, "Invalid room ID: " + roomIdStr, e);
+            request.setAttribute("error", "ID phòng không hợp lệ.");
+            request.getRequestDispatcher("/WEB-INF/views/user/room_details.jsp").forward(request, response);
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error retrieving room for booking: " + roomIdStr, e);
+            request.setAttribute("error", "Không thể tải thông tin phòng do lỗi cơ sở dữ liệu.");
+            request.getRequestDispatcher("/WEB-INF/views/user/room_details.jsp").forward(request, response);
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        User user = (User) request.getSession().getAttribute("user");
+        if (user == null || !"user".equals(user.getRole())) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        String roomIdStr = request.getParameter("roomId");
+        String checkInDateStr = request.getParameter("checkInDate");
+        String checkOutDateStr = request.getParameter("checkOutDate");
+        String adultsStr = request.getParameter("adults");
+        String childrenStr = request.getParameter("children");
+
+        try {
+            int roomId = Integer.parseInt(roomIdStr);
+            Room room = userRoomService.getRoomById(roomId);
+            if (room == null || !room.isAvailable()) {
+                request.setAttribute("error", "Phòng không còn trống để đặt.");
+                request.setAttribute("room", room);
+                request.getRequestDispatcher("/WEB-INF/views/user/book_room.jsp").forward(request, response);
+                return;
+            }
+
+            Date checkInDate = DATE_FORMAT.parse(checkInDateStr);
+            Date checkOutDate = DATE_FORMAT.parse(checkOutDateStr);
+            int adults = Integer.parseInt(adultsStr);
+            int children = Integer.parseInt(childrenStr);
+
+            // Kiểm tra logic
+            if (checkOutDate.before(checkInDate)) {
+                request.setAttribute("error", "Ngày trả phòng phải sau ngày nhận phòng.");
+                request.setAttribute("room", room);
+                request.getRequestDispatcher("/WEB-INF/views/user/book_room.jsp").forward(request, response);
+                return;
+            }
+            if (adults + children > room.getMaxAdults() + room.getMaxChildren()) {
+                request.setAttribute("error", "Số người vượt quá sức chứa tối đa của phòng.");
+                request.setAttribute("room", room);
+                request.getRequestDispatcher("/WEB-INF/views/user/book_room.jsp").forward(request, response);
+                return;
+            }
+
+            // Tính tổng giá
+            long diffInMillies = checkOutDate.getTime() - checkInDate.getTime();
+            int days = (int) (diffInMillies / (1000 * 60 * 60 * 24));
+            double totalPrice = days * room.getPricePerNight();
+
+            // Tạo và lưu đặt phòng
+            Booking booking = new Booking();
+            booking.setUserId(user.getUserId());
+            booking.setRoomId(roomId);
+            booking.setCheckInDate(checkInDate);
+            booking.setCheckOutDate(checkOutDate);
+            booking.setTotalPrice(totalPrice);
+            booking.setStatus("Pending");
+            booking.setAdults(adults);
+            booking.setChildren(children);
+
+            userRoomService.bookRoom(booking);
+            LOGGER.info("Booking created successfully for roomId=" + roomId + ", userId=" + user.getUserId());
+
+            request.setAttribute("success", "Đặt phòng thành công! Vui lòng kiểm tra lịch sử đặt phòng.");
+            request.getRequestDispatcher("/WEB-INF/views/user/book_room.jsp").forward(request, response);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error processing booking for roomId: " + roomIdStr, e);
+            request.setAttribute("error", "Không thể đặt phòng do lỗi: " + e.getMessage());
+            request.getRequestDispatcher("/WEB-INF/views/user/book_room.jsp").forward(request, response);
+        }
+    }
+}
+
+package com.mycompany.oceanichotel.controllers.user;
+
+import com.mycompany.oceanichotel.models.Booking;
+import com.mycompany.oceanichotel.models.BookingHistory;
+import com.mycompany.oceanichotel.models.User;
+import com.mycompany.oceanichotel.services.user.UserBookingService;
+import com.mycompany.oceanichotel.services.user.UserRoomService;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
+@WebServlet("/user/bookings")
+public class UserBookingsController extends HttpServlet {
+    private UserBookingService userBookingService;
+    private UserRoomService userRoomService;
+    private static final Logger LOGGER = Logger.getLogger(UserBookingsController.class.getName());
+
+    @Override
+    public void init() throws ServletException {
+        userBookingService = new UserBookingService();
+        userRoomService = new UserRoomService();
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        User user = (User) request.getSession().getAttribute("user");
+        if (user == null) {
+            LOGGER.info("User not logged in, redirecting to login.");
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        LOGGER.info("Current user ID: " + user.getUserId());
+
+        try {
+            String statusFilter = request.getParameter("statusFilter");
+            String checkInFrom = request.getParameter("checkInFrom");
+            String checkInTo = request.getParameter("checkInTo");
+            String sortOption = request.getParameter("sortOption");
+
+            List<Booking> bookings = userBookingService.getUserBookings(
+                user.getUserId(), statusFilter, checkInFrom, checkInTo, sortOption
+            );
+            // Kiểm tra xem booking có giao dịch MoMo Pending không
+            for (Booking booking : bookings) {
+                boolean hasPendingTransaction = userBookingService.hasPendingMoMoTransaction(booking.getBookingId());
+                booking.setHasPendingTransaction(hasPendingTransaction);
+            }
+            LOGGER.log(Level.INFO, "Retrieved {0} bookings for userId={1}", new Object[]{bookings.size(), user.getUserId()});
+            request.setAttribute("bookings", bookings);
+
+            List<BookingHistory> history = userRoomService.getBookingHistory(user.getUserId());
+            LOGGER.log(Level.INFO, "Retrieved {0} history records for userId={1}", new Object[]{history.size(), user.getUserId()});
+            request.setAttribute("history", history);
+
+            request.setAttribute("statusFilter", statusFilter);
+            request.setAttribute("checkInFrom", checkInFrom);
+            request.setAttribute("checkInTo", checkInTo);
+            request.setAttribute("sortOption", sortOption);
+
+            request.getRequestDispatcher("/WEB-INF/views/user/bookings.jsp").forward(request, response);
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error retrieving bookings or history for userId=" + user.getUserId(), e);
+            request.setAttribute("error", "Unable to load bookings or history: " + e.getMessage());
+            request.getRequestDispatcher("/WEB-INF/views/user/bookings.jsp").forward(request, response);
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        User user = (User) request.getSession().getAttribute("user");
+        if (user == null) {
+            LOGGER.info("User not logged in, redirecting to login.");
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        String action = request.getParameter("action");
+        int bookingId = Integer.parseInt(request.getParameter("bookingId"));
+
+        try {
+            if ("cancel".equals(action)) {
+                userRoomService.cancelBooking(bookingId, user.getUserId());
+                LOGGER.info("Booking ID=" + bookingId + " cancelled by userId=" + user.getUserId());
+            } else if ("pay".equals(action)) {
+                String method = request.getParameter("method");
+                Booking booking = userBookingService.getBookingById(bookingId, user.getUserId());
+                if (booking == null || !"Pending".equals(booking.getStatus())) {
+                    throw new SQLException("Booking not found or not in Pending status.");
+                }
+
+                if ("test".equals(method)) {
+                    userBookingService.confirmBooking(bookingId, user.getUserId());
+                    LOGGER.info("Booking ID=" + bookingId + " confirmed immediately (Test payment) by userId=" + user.getUserId());
+                } else if ("hotel".equals(method)) {
+                    LOGGER.info("Booking ID=" + bookingId + " set for payment at hotel, status remains Pending.");
+                } else if ("qr".equals(method)) {
+                    LOGGER.info("Booking ID=" + bookingId + " set for QR payment, status remains Pending.");
+                } else if ("momo".equals(method)) {
+                    int transactionId = userBookingService.createTransaction(bookingId, user.getUserId(), booking.getTotalPrice());
+                    LOGGER.info("Transaction ID=" + transactionId + " created for MoMo payment for booking ID=" + bookingId);
+                }
+            } else if ("confirmMoMo".equals(action)) {
+                // Xác nhận thanh toán MoMo
+                userBookingService.confirmMoMoPayment(bookingId, user.getUserId());
+                LOGGER.info("MoMo payment confirmed for booking ID=" + bookingId + " by userId=" + user.getUserId());
+            }
+            response.sendRedirect(request.getContextPath() + "/user/bookings");
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error processing action '" + action + "' for booking ID=" + bookingId, e);
+            request.setAttribute("error", "Unable to process action '" + action + "': " + e.getMessage());
+            doGet(request, response);
+        }
+    }
+}
+
+package com.mycompany.oceanichotel.controllers.user;
+
+import com.mycompany.oceanichotel.models.User;
+import com.mycompany.oceanichotel.models.RoomType;
+import com.mycompany.oceanichotel.services.admin.AdminRoomTypeService;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
+
+@WebServlet("/user/dashboard")
+public class UserDashboardController extends HttpServlet {
+
+    private AdminRoomTypeService roomTypeService;
+    private static final Logger LOGGER = Logger.getLogger(UserDashboardController.class.getName());
+
+    @Override
+    public void init() throws ServletException {
+        roomTypeService = new AdminRoomTypeService();
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("user") != null) {
+            User user = (User) session.getAttribute("user");
+            if ("user".equals(user.getRole())) {
+                request.setAttribute("username", user.getUsername());
+                String searchQuery = request.getParameter("search");
+                try {
+                    List<RoomType> roomTypes = roomTypeService.getAllRoomTypes();
+                    if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+                        roomTypes = roomTypes.stream()
+                                .filter(rt -> rt.getTypeName().toLowerCase().contains(searchQuery.toLowerCase()))
+                                .collect(Collectors.toList());
+                    }
+                    LOGGER.log(Level.INFO, "Retrieved {0} room types from database.", roomTypes.size());
+                    if (roomTypes.isEmpty()) {
+                        LOGGER.warning("No room types found in the database.");
+                    }
+                    request.setAttribute("roomTypes", roomTypes);
+                } catch (SQLException e) {
+                    LOGGER.log(Level.SEVERE, "Error retrieving room types from database", e);
+                    request.setAttribute("error", "Unable to load room types due to a database error.");
+                }
+                request.getRequestDispatcher("/WEB-INF/views/user/dashboard.jsp").forward(request, response);
+                return;
+            }
+        }
+        LOGGER.info("User not logged in or not authorized, redirecting to login.");
+        response.sendRedirect(request.getContextPath() + "/login");
+    }
+}
+
+package com.mycompany.oceanichotel.controllers.user;
+
+import com.mycompany.oceanichotel.models.Booking;
+import com.mycompany.oceanichotel.models.User;
+import com.mycompany.oceanichotel.services.user.UserBookingService;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
+@WebServlet("/user/payment")
+public class UserPaymentController extends HttpServlet {
+    private UserBookingService userBookingService;
+    private static final Logger LOGGER = Logger.getLogger(UserPaymentController.class.getName());
+
+    @Override
+    public void init() throws ServletException {
+        userBookingService = new UserBookingService();
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        User user = (User) request.getSession().getAttribute("user");
+        if (user == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        try {
+            Booking booking = new Booking();
+            booking.setUserId(user.getUserId());
+            booking.setRoomId(Integer.parseInt(request.getParameter("roomId")));
+            booking.setCheckInDate(new java.text.SimpleDateFormat("yyyy-MM-dd").parse(request.getParameter("checkIn")));
+            booking.setCheckOutDate(new java.text.SimpleDateFormat("yyyy-MM-dd").parse(request.getParameter("checkOut")));
+            booking.setAdults(Integer.parseInt(request.getParameter("adults")));
+            booking.setChildren(Integer.parseInt(request.getParameter("children")));
+            booking.setTotalPrice(Double.parseDouble(request.getParameter("totalPrice")));
+            booking.setStatus("PENDING");
+
+            userBookingService.saveBooking(booking); // Lưu booking vào DB
+            request.setAttribute("booking", booking);
+            request.getRequestDispatcher("/WEB-INF/views/user/payment.jsp").forward(request, response);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error processing payment", e);
+            request.setAttribute("error", "Unable to process payment.");
+            request.getRequestDispatcher("/WEB-INF/views/user/payment.jsp").forward(request, response);
+        }
+    }
+}
+
+package com.mycompany.oceanichotel.controllers.user;
+
+import com.mycompany.oceanichotel.models.User;
+import com.mycompany.oceanichotel.services.user.UserService;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
+@WebServlet("/user/profile")
+public class UserProfileController extends HttpServlet {
+    private UserService userService;
+    private static final Logger LOGGER = Logger.getLogger(UserProfileController.class.getName());
+
+    @Override
+    public void init() throws ServletException {
+        userService = new UserService();
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        User user = (User) request.getSession().getAttribute("user");
+        if (user == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        request.setAttribute("user", user);
+        request.getRequestDispatcher("/WEB-INF/views/user/profile.jsp").forward(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        User user = (User) request.getSession().getAttribute("user");
+        if (user == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        user.setUsername(request.getParameter("fullName")); // Sửa lại để khớp với JSP
+        user.setEmail(request.getParameter("email"));
+        user.setAvatar(request.getParameter("avatar"));
+
+        try {
+            userService.updateUser(user);
+            request.setAttribute("successMessage", "Profile updated successfully.");
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error updating profile", e);
+            request.setAttribute("errorMessage", "Unable to update profile.");
+        }
+        request.setAttribute("user", user);
+        request.getRequestDispatcher("/WEB-INF/views/user/profile.jsp").forward(request, response);
+    }
+}
+
+package com.mycompany.oceanichotel.controllers.user;
+
+import com.mycompany.oceanichotel.models.Room;
+import com.mycompany.oceanichotel.models.User;
+import com.mycompany.oceanichotel.services.user.UserRoomService;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
+@WebServlet("/user/rooms")
+public class UserRoomController extends HttpServlet {
+    private UserRoomService userRoomService;
+    private static final Logger LOGGER = Logger.getLogger(UserRoomController.class.getName());
+
+    @Override
+    public void init() throws ServletException {
+        userRoomService = new UserRoomService();
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        User user = (User) request.getSession().getAttribute("user");
+        if (user == null || !"user".equals(user.getRole())) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        String typeId = request.getParameter("typeId");
+
+        try {
+            if (typeId == null || typeId.trim().isEmpty()) {
+                request.setAttribute("error", "Please select a room type.");
+            } else {
+                List<Room> rooms = userRoomService.getAvailableRoomsByType(typeId);
+                request.setAttribute("rooms", rooms);
+                LOGGER.log(Level.INFO, "Found {0} available rooms for typeId: {1}", 
+                    new Object[]{rooms.size(), typeId});
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error retrieving rooms for typeId: {0}", typeId);
+            request.setAttribute("error", "Unable to load rooms due to a database error: " + e.getMessage());
+        }
+
+        request.getRequestDispatcher("/WEB-INF/views/user/rooms.jsp").forward(request, response);
+    }
+}
+
+//package com.mycompany.oceanichotel.controllers.user;
+//
+//import com.mycompany.oceanichotel.models.Room;
+//import com.mycompany.oceanichotel.services.user.UserRoomDetailsService;
+//import jakarta.servlet.ServletException;
+//import jakarta.servlet.annotation.WebServlet;
+//import jakarta.servlet.http.HttpServlet;
+//import jakarta.servlet.http.HttpServletRequest;
+//import jakarta.servlet.http.HttpServletResponse;
+//
+//import java.io.IOException;
+//import java.sql.SQLException;
+//import java.text.SimpleDateFormat;
+//import java.util.Date;
+//import java.util.logging.Level;
+//import java.util.logging.Logger;
+//
+//@WebServlet("/user/room-details/*")
+//public class UserRoomDetailsController extends HttpServlet {
+//    private UserRoomDetailsService roomDetailsService;
+//    private static final Logger LOGGER = Logger.getLogger(UserRoomDetailsController.class.getName());
+//    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+//
+//    @Override
+//    public void init() throws ServletException {
+//        roomDetailsService = new UserRoomDetailsService();
+//    }
+//
+//    @Override
+//    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+//            throws ServletException, IOException {
+//        String pathInfo = request.getPathInfo();
+//        if (pathInfo == null || pathInfo.equals("/")) {
+//            LOGGER.warning("Room ID is missing in request: " + request.getRequestURI());
+//            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Room ID is required");
+//            return;
+//        }
+//
+//        String[] splits = pathInfo.split("/");
+//        if (splits.length < 2) {
+//            LOGGER.warning("Invalid Room ID format in request: " + pathInfo);
+//            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Room ID");
+//            return;
+//        }
+//
+//        int roomId;
+//        try {
+//            roomId = Integer.parseInt(splits[1]);
+//        } catch (NumberFormatException e) {
+//            LOGGER.warning("Invalid Room ID format: " + splits[1]);
+//            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Room ID format");
+//            return;
+//        }
+//
+//        try {
+//            Room room = roomDetailsService.getRoomById(roomId);
+//            if (room == null) {
+//                LOGGER.info("Room not found for ID: " + roomId);
+//                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Room not found");
+//                return;
+//            }
+//
+//            String checkIn = request.getParameter("checkIn");
+//            String checkOut = request.getParameter("checkOut");
+//            if (checkIn != null && checkOut != null) {
+//                try {
+//                    Date checkInDate = DATE_FORMAT.parse(checkIn);
+//                    Date checkOutDate = DATE_FORMAT.parse(checkOut);
+//                    if (checkOutDate.before(checkInDate)) {
+//                        request.setAttribute("error", "Check-out date must be after check-in date");
+//                    }
+//                } catch (Exception e) {
+//                    request.setAttribute("error", "Invalid date format");
+//                }
+//            }
+//
+//            request.setAttribute("room", room);
+//            request.setAttribute("checkIn", checkIn);
+//            request.setAttribute("checkOut", checkOut);
+//            request.setAttribute("adults", request.getParameter("adults"));
+//            request.setAttribute("children", request.getParameter("children"));
+//            LOGGER.info("Room details fetched successfully for roomId: " + roomId);
+//            request.getRequestDispatcher("/WEB-INF/views/user/room_details.jsp").forward(request, response);
+//        } catch (SQLException e) {
+//            LOGGER.log(Level.SEVERE, "Database error while fetching room details for roomId: " + roomId, e);
+//            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Database error occurred");
+//        }
+//    }
+//}
+package com.mycompany.oceanichotel.controllers.user;
+
+import com.mycompany.oceanichotel.models.Room;
+import com.mycompany.oceanichotel.models.User;
+import com.mycompany.oceanichotel.services.user.UserRoomService;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
+@WebServlet("/user/room-details/*")
+public class UserRoomDetailsController extends HttpServlet {
+
+    private UserRoomService userRoomService;
+    private static final Logger LOGGER = Logger.getLogger(UserRoomDetailsController.class.getName());
+
+    @Override
+    public void init() throws ServletException {
+        userRoomService = new UserRoomService();
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        User user = (User) request.getSession().getAttribute("user");
+        if (user == null || !"user".equals(user.getRole())) {
+            LOGGER.info("User not logged in or not authorized, redirecting to login.");
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        String pathInfo = request.getPathInfo();
+        if (pathInfo == null || pathInfo.length() <= 1) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Room ID is required.");
+            return;
+        }
+
+        String roomIdStr = pathInfo.substring(1); // Lấy roomId từ URL (ví dụ: /user/room-details/1 -> "1")
+        try {
+            int roomId = Integer.parseInt(roomIdStr);
+            Room room = userRoomService.getRoomById(roomId);
+            if (room == null) {
+                LOGGER.warning("Room not found with ID: " + roomId);
+                request.setAttribute("error", "Phòng không tồn tại.");
+            } else {
+                request.setAttribute("room", room);
+            }
+        } catch (NumberFormatException e) {
+            LOGGER.log(Level.WARNING, "Invalid room ID: " + roomIdStr, e);
+            request.setAttribute("error", "ID phòng không hợp lệ.");
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error retrieving room details for roomId: " + roomIdStr, e);
+            request.setAttribute("error", "Không thể tải chi tiết phòng do lỗi cơ sở dữ liệu.");
+        }
+
+        request.getRequestDispatcher("/WEB-INF/views/user/room_details.jsp").forward(request, response);
+    }
+}
+

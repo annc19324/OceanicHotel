@@ -17,7 +17,7 @@ public class DatabaseUtil {
 //    private static final String USER = "root";
 //    private static final String PASSWORD = "";
 
-    private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=OceanHotel;encrypt=true;trustServerCertificate=true";
+    private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=OceanicHotel;encrypt=true;trustServerCertificate=true";
     private static final String USER = "sa"; // Thay bằng username SQL Server của bạn
     private static final String PASSWORD = "12345"; // Thay bằng password của bạn
 

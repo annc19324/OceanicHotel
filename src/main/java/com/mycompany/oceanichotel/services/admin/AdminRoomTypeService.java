@@ -4,6 +4,7 @@ import com.mycompany.oceanichotel.models.RoomType;
 import com.mycompany.oceanichotel.models.RoomTypeImage;
 import com.mycompany.oceanichotel.utils.DatabaseUtil;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,12 +15,12 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 
 public class AdminRoomTypeService {
+
     private static final Logger LOGGER = Logger.getLogger(AdminRoomTypeService.class.getName());
 
     public RoomType getRoomTypeById(int typeId) throws SQLException {
         String sql = "SELECT * FROM Room_Types WHERE type_id = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, typeId);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -36,9 +37,7 @@ public class AdminRoomTypeService {
     public List<RoomType> getAllRoomTypes() throws SQLException {
         List<RoomType> roomTypes = new ArrayList<>();
         String sql = "SELECT * FROM Room_Types ORDER BY type_name";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 RoomType roomType = mapRoomType(rs);
                 roomType.setImages(getRoomTypeImages(rs.getInt("type_id")));
@@ -50,8 +49,7 @@ public class AdminRoomTypeService {
 
     public RoomTypeImage getImageById(int imageId) throws SQLException {
         String sql = "SELECT * FROM Room_Type_Images WHERE image_id = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, imageId);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -65,8 +63,7 @@ public class AdminRoomTypeService {
 
     public void deleteRoomTypeImage(int imageId) throws SQLException {
         String sql = "DELETE FROM Room_Type_Images WHERE image_id = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, imageId);
             int rowsAffected = stmt.executeUpdate();
             if (rowsAffected == 0) {
@@ -101,18 +98,21 @@ public class AdminRoomTypeService {
             conn.commit();
             LOGGER.info("Đặt ảnh chính với imageId=" + imageId + " cho typeId=" + typeId + " thành công.");
         } catch (SQLException e) {
-            if (conn != null) conn.rollback();
+            if (conn != null) {
+                conn.rollback();
+            }
             LOGGER.log(Level.SEVERE, "Lỗi khi đặt ảnh chính", e);
             throw e;
         } finally {
-            if (conn != null) conn.close();
+            if (conn != null) {
+                conn.close();
+            }
         }
     }
 
     public void addRoomTypeImage(int typeId, RoomTypeImage image) throws SQLException {
         String sql = "INSERT INTO Room_Type_Images (type_id, image_url, is_primary) VALUES (?, ?, ?)";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, typeId);
             stmt.setString(2, image.getImageUrl());
             stmt.setBoolean(3, image.isPrimary());
@@ -123,10 +123,9 @@ public class AdminRoomTypeService {
 
     public void addRoomType(RoomType roomType) throws SQLException {
         String sql = "INSERT INTO Room_Types (type_name, default_price, max_adults, max_children, description) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, roomType.getTypeName());
-            stmt.setDouble(2, roomType.getDefaultPrice());
+            stmt.setBigDecimal(2, roomType.getDefaultPrice());
             stmt.setInt(3, roomType.getMaxAdults());
             stmt.setInt(4, roomType.getMaxChildren());
             stmt.setString(5, roomType.getDescription());
@@ -146,10 +145,9 @@ public class AdminRoomTypeService {
 
     public void updateRoomType(RoomType roomType) throws SQLException {
         String sql = "UPDATE Room_Types SET type_name = ?, default_price = ?, max_adults = ?, max_children = ?, description = ? WHERE type_id = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, roomType.getTypeName());
-            stmt.setDouble(2, roomType.getDefaultPrice());
+            stmt.setBigDecimal(2, roomType.getDefaultPrice());
             stmt.setInt(3, roomType.getMaxAdults());
             stmt.setInt(4, roomType.getMaxChildren());
             stmt.setString(5, roomType.getDescription());
@@ -167,6 +165,16 @@ public class AdminRoomTypeService {
         try {
             conn = DatabaseUtil.getConnection();
             conn.setAutoCommit(false);
+
+            // Kiểm tra xem có phòng nào sử dụng loại phòng này không
+            String checkRoomsSql = "SELECT COUNT(*) FROM Rooms WHERE type_id = ?";
+            try (PreparedStatement checkStmt = conn.prepareStatement(checkRoomsSql)) {
+                checkStmt.setInt(1, typeId);
+                ResultSet rs = checkStmt.executeQuery();
+                if (rs.next() && rs.getInt(1) > 0) {
+                    throw new SQLException("Cannot delete room type because it is in use by " + rs.getInt(1) + " room(s).");
+                }
+            }
 
             String sqlImages = "DELETE FROM Room_Type_Images WHERE type_id = ?";
             try (PreparedStatement stmtImages = conn.prepareStatement(sqlImages)) {
@@ -186,19 +194,22 @@ public class AdminRoomTypeService {
             conn.commit();
             LOGGER.info("Xóa RoomType với typeId=" + typeId + " thành công.");
         } catch (SQLException e) {
-            if (conn != null) conn.rollback();
+            if (conn != null) {
+                conn.rollback();
+            }
             LOGGER.log(Level.SEVERE, "Lỗi khi xóa RoomType", e);
             throw e;
         } finally {
-            if (conn != null) conn.close();
+            if (conn != null) {
+                conn.close();
+            }
         }
     }
 
     public List<RoomTypeImage> getRoomTypeImages(int typeId) throws SQLException {
         List<RoomTypeImage> images = new ArrayList<>();
         String query = "SELECT * FROM Room_Type_Images WHERE type_id = ? ORDER BY is_primary DESC";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, typeId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -213,7 +224,7 @@ public class AdminRoomTypeService {
         RoomType roomType = new RoomType();
         roomType.setTypeId(rs.getInt("type_id"));
         roomType.setTypeName(rs.getString("type_name"));
-        roomType.setDefaultPrice(rs.getDouble("default_price"));
+        roomType.setDefaultPrice(rs.getBigDecimal("default_price"));
         roomType.setMaxAdults(rs.getInt("max_adults"));
         roomType.setMaxChildren(rs.getInt("max_children"));
         roomType.setDescription(rs.getString("description"));
@@ -226,7 +237,7 @@ public class AdminRoomTypeService {
         image.setImageId(rs.getInt("image_id"));
         image.setTypeId(rs.getInt("type_id"));
         image.setImageUrl(rs.getString("image_url"));
-        image.setPrimary(rs.getBoolean("is_primary"));
+        image.setIsPrimary(rs.getBoolean("is_primary"));
         image.setCreatedAt(rs.getTimestamp("created_at"));
         return image;
     }

@@ -61,7 +61,9 @@
                 </div>
                 <div class="report-section">
                     <h3><%= language.equals("vi") ? "Doanh thu" : "Revenue"%></h3>
-                    <p><%= language.equals("vi") ? "Tổng doanh thu: " : "Total Revenue: "%> <%= request.getAttribute("totalRevenue")%> VNĐ</p>
+                    <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+                        <p><%= language.equals("vi") ? "Tổng doanh thu: " : "Total Revenue: "%> <fmt:formatNumber value="<%= request.getAttribute(
+                        \"totalRevenue\") %>" type="number" minFractionDigits="0" maxFractionDigits="1"/> VNĐ</p>
                     <div class="chart-container">
                         <canvas id="revenueChart"></canvas>
                     </div>

@@ -4,17 +4,11 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ page import="java.util.concurrent.TimeUnit" %>
 <%
-    String language = (String) session.getAttribute("language");
-    if (language == null) {
-        language = "en";
-        session.setAttribute("language", language);
-    }
-    String theme = (String) session.getAttribute("theme");
-    if (theme == null) {
-        theme = "light";
-        session.setAttribute("theme", theme);
-    }
     User currentUser = (User) session.getAttribute("user");
+    String language = currentUser != null && currentUser.getLanguage() != null ? currentUser.getLanguage() : "en";
+    String theme = currentUser != null && currentUser.getTheme() != null ? currentUser.getTheme() : "light";
+    session.setAttribute("language", language);
+    session.setAttribute("theme", theme);
 %>
 <!DOCTYPE html>
 <html lang="<%= language %>">
@@ -30,338 +24,461 @@
             body {
                 font-family: 'Poppins', sans-serif;
                 transition: background 0.3s ease, color 0.3s ease;
+                background: #f0f7fa;
+                color: #1e3a5f;
             }
             .dark-mode {
-                background: #1a202c;
-                color: #e2e8f0;
+                background: #1e3a5f;
+                color: #e6f0fa;
             }
             .header-bg {
-                background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url('<%= request.getContextPath() %>/assets/images/hotel-bg.jpg') no-repeat center;
-                background-size: cover;
+                background: #1e3a5f;
+                position: fixed;
+                width: 100%;
+                top: 0;
+                z-index: 10;
+                padding: 1rem 1.5rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                box-shadow: 0 2px 4px rgba(0, 51, 102, 0.2);
+            }
+            .header-bg a, .header-bg span {
+                color: #fff;
+                text-decoration: none;
+                cursor: pointer;
+            }
+            .header-bg a:hover, .header-bg span:hover {
+                color: #a3bffa;
+            }
+            .content-section {
+                margin-top: 100px;
+                padding: 15px;
+                background: #fff;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 51, 102, 0.2);
+            }
+            .dark-mode .content-section {
+                background: #2c5282;
+            }
+            h1, h2 {
+                font-size: 1.5rem;
+                text-align: center;
+                margin-bottom: 15px;
+            }
+            .dark-mode h1, .dark-mode h2 {
+                color: #e6f0fa;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th, td {
+                padding: 8px;
+                text-align: left;
+                border-bottom: 1px solid #ccc;
+            }
+            .dark-mode th, .dark-mode td {
+                border-bottom: 1px solid #a3bffa;
+                color: #e6f0fa;
+            }
+            th {
+                background: #f0f7fa;
+            }
+            .dark-mode th {
+                background: #4a6f9c;
             }
             .btn {
-                transition: all 0.3s ease;
+                background: #2b6cb0;
+                color: #fff;
+                padding: 6px 12px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: background 0.2s;
             }
             .btn:hover {
-                transform: translateY(-2px);
+                background: #1e4976;
+            }
+            .dark-mode .btn {
+                background: #2b6cb0;
+            }
+            .dark-mode .btn:hover {
+                background: #1e4976;
+            }
+            select, input[type="date"] {
+                width: 100%;
+                padding: 6px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                background: #fff;
+                color: #1e3a5f;
+            }
+            .dark-mode select, .dark-mode input[type="date"] {
+                background: #4a6f9c;
+                border-color: #a3bffa;
+                color: #e6f0fa;
+            }
+            .avatar {
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                object-fit: cover;
+                cursor: pointer;
+            }
+            .avatar-container {
+                display: flex;
+                align-items: center;
+            }
+            .modal {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.8);
+                z-index: 1000;
+            }
+            .modal-content {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                max-width: 90%;
+                max-height: 90%;
+            }
+            .modal-image {
+                width: 300px;
+                height: auto;
+                border-radius: 10px;
+            }
+            .payment-modal, .qr-modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.8);
+                display: none;
+                justify-content: center;
+                align-items: center;
+                z-index: 50;
+            }
+            .modal-box {
+                background: #fff;
+                padding: 20px;
+                border-radius: 8px;
+                max-width: 400px;
+                width: 100%;
+                text-align: center;
+            }
+            .dark-mode .modal-box {
+                background: #2c5282;
+                color: #e6f0fa;
+            }
+            footer {
+                background: #1e3a5f;
+                color: #fff;
+                padding: 1.5rem;
+                text-align: center;
+                margin-top: 20px;
             }
         </style>
     </head>
     <body class="<%= "dark".equals(theme) ? "dark-mode" : "" %>">
         <div class="relative min-h-screen">
             <!-- Header -->
-            <header class="header-bg h-96 md:h-[70vh] relative rounded-b-3xl shadow-2xl">
-                <div class="absolute inset-0 bg-black bg-opacity-40 rounded-b-3xl"></div>
-                <nav class="absolute top-0 w-full flex justify-between items-center px-6 py-4 z-20">
-                    <div class="flex items-center space-x-4">
-                        <img src="<%= request.getContextPath() %>/assets/images/width_800.jpg" alt="Logo" class="h-10">
-                        <span class="text-white font-bold text-xl hidden md:block">Oceanic Hotel</span>
-                    </div>
-                    <div class="flex items-center space-x-6">
-                        <c:choose>
-                            <c:when test="${not empty sessionScope.user}">
-                                <a href="<%= request.getContextPath() %>/user/profile" class="text-white hover:text-blue-300 transition"><%= "vi".equals(language) ? "Hồ sơ" : "Profile" %></a>
-                                <a href="<%= request.getContextPath() %>/user/bookings" class="text-white hover:text-blue-300 transition"><%= "vi".equals(language) ? "Đặt phòng" : "Bookings" %></a>
-                                <a href="<%= request.getContextPath() %>/logout" class="text-white hover:text-blue-300 transition"><%= "vi".equals(language) ? "Đăng xuất" : "Logout" %></a>
-                            </c:when>
-                            <c:otherwise>
-                                <a href="<%= request.getContextPath() %>/login" class="text-white hover:text-blue-300 transition"><%= "vi".equals(language) ? "Đăng nhập" : "Login" %></a>
-                                <a href="<%= request.getContextPath() %>/register" class="text-white hover:text-blue-300 transition"><%= "vi".equals(language) ? "Đăng ký" : "Register" %></a>
-                            </c:otherwise>
-                        </c:choose>
-                        <span class="language-toggle text-white" onclick="changeLanguage('<%= "vi".equals(language) ? "en" : "vi" %>')">
+            <header class="header-bg">
+                <div class="flex items-center space-x-4">
+                    <img src="<%= request.getContextPath() %>/assets/images/width_800.jpg" alt="Logo" class="h-10">
+                    <a class="font-bold text-lg" href="<%= request.getContextPath() %>/user/dashboard">Oceanic Hotel</a>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <nav class="flex items-center space-x-6">
+                        <a href="<%= request.getContextPath() %>/user/profile" class="text-white hover:text-blue-300 transition"><%= "vi".equals(language) ? "Hồ sơ" : "Profile" %></a>
+                        <a href="<%= request.getContextPath() %>/user/bookings" class="text-white hover:text-blue-300 transition"><%= "vi".equals(language) ? "Đặt phòng" : "Bookings" %></a>
+                        <a href="<%= request.getContextPath() %>/logout" class="text-white hover:text-blue-300 transition"><%= "vi".equals(language) ? "Đăng xuất" : "Logout" %></a>
+                        <span id="languageToggle" class="language-toggle text-white" onclick="changeLanguage('<%= "vi".equals(language) ? "en" : "vi" %>')">
                             <i class="fas fa-globe mr-1"></i><%= "vi".equals(language) ? "EN" : "VI" %>
                         </span>
-                        <span class="theme-toggle text-white" onclick="changeTheme('<%= "dark".equals(theme) ? "light" : "dark" %>')">
+                        <span id="themeToggle" class="theme-toggle text-white" onclick="changeTheme('<%= "dark".equals(theme) ? "light" : "dark" %>')">
                             <i class="fas <%= "dark".equals(theme) ? "fa-sun" : "fa-moon" %>"></i>
                         </span>
+                    </nav>
+                    <% if (currentUser != null) { %>
+                    <div class="avatar-container">
+                        <img src="<%= currentUser.getAvatar() != null && !currentUser.getAvatar().isEmpty() ? request.getContextPath() + "/assets/images/" + currentUser.getAvatar() : request.getContextPath() + "/assets/images/avatar-default.jpg" %>" 
+                             alt="Avatar" class="avatar" 
+                             onclick="showModal()"
+                             onerror="this.src='<%= request.getContextPath() %>/assets/images/avatar-default.jpg'; this.onerror=null;">
                     </div>
-                </nav>
-                <div class="relative z-10 flex flex-col items-center justify-center h-full text-center text-white px-4">
-                    <h1 class="text-4xl md:text-6xl font-bold mb-4 animate-fade-in-down"><%= "vi".equals(language) ? "Lịch sử đặt phòng" : "Booking History" %></h1>
-                    <p class="text-lg md:text-xl max-w-2xl"><%= "vi".equals(language) ? "Xem lại các đặt phòng của bạn." : "Review your bookings." %></p>
+                    <% } %>
                 </div>
             </header>
 
+            <!-- Modal để hiển thị ảnh lớn -->
+            <% if (currentUser != null) { %>
+            <div id="avatarModal" class="modal">
+                <div class="modal-content">
+                    <img src="<%= currentUser.getAvatar() != null && !currentUser.getAvatar().isEmpty() ? request.getContextPath() + "/assets/images/" + currentUser.getAvatar() : request.getContextPath() + "/assets/images/avatar-default.jpg" %>" 
+                         alt="Large Avatar" class="modal-image"
+                         onerror="this.src='<%= request.getContextPath() %>/assets/images/avatar-default.jpg'; this.onerror=null;">
+                </div>
+            </div>
+            <% } %>
+
             <!-- Main Content -->
-            <main class="container mx-auto px-4 mt-12">
-                <c:if test="${not empty error}">
-                    <p class="text-red-600 dark:text-red-400 text-lg text-center mb-4">${error}</p>
-                </c:if>
+            <main class="container mx-auto px-4 mt-20">
+                <div class="content-section">
+                    <h1><%= "vi".equals(language) ? "Lịch sử đặt phòng" : "Booking History" %></h1>
+                    <p class="text-center text-lg"><%= "vi".equals(language) ? "Xem lại các đặt phòng của bạn." : "Review your bookings." %></p>
 
-                <!-- Filter Section -->
-                <section class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
-                    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
-                        <%= "vi".equals(language) ? "Lọc và sắp xếp" : "Filter and Sort" %>
-                    </h2>
-                    <form method="get" action="<%= request.getContextPath() %>/user/bookings" class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                        <div>
-                            <label class="block text-gray-700 dark:text-gray-300"><%= "vi".equals(language) ? "Trạng thái" : "Status" %></label>
-                            <select name="statusFilter" class="w-full p-2 border rounded dark:bg-gray-800 dark:text-white">
-                                <option value=""><%= "vi".equals(language) ? "Tất cả" : "All" %></option>
-                                <option value="Pending" ${statusFilter == 'Pending' ? 'selected' : ''}>Pending</option>
-                                <option value="Confirmed" ${statusFilter == 'Confirmed' ? 'selected' : ''}>Confirmed</option>
-                                <option value="Cancelled" ${statusFilter == 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 dark:text-gray-300"><%= "vi".equals(language) ? "Từ ngày nhận" : "Check-in From" %></label>
-                            <input type="date" name="checkInFrom" value="${checkInFrom}" class="w-full p-2 border rounded dark:bg-gray-800 dark:text-white">
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 dark:text-gray-300"><%= "vi".equals(language) ? "Đến ngày nhận" : "Check-in To" %></label>
-                            <input type="date" name="checkInTo" value="${checkInTo}" class="w-full p-2 border rounded dark:bg-gray-800 dark:text-white">
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 dark:text-gray-300"><%= "vi".equals(language) ? "Sắp xếp" : "Sort" %></label>
-                            <select name="sortOption" class="w-full p-2 border rounded dark:bg-gray-800 dark:text-white">
-                                <option value="newest" ${sortOption == 'newest' ? 'selected' : ''}><%= "vi".equals(language) ? "Mới nhất" : "Newest" %></option>
-                                <option value="oldest" ${sortOption == 'oldest' ? 'selected' : ''}><%= "vi".equals(language) ? "Cũ nhất" : "Oldest" %></option>
-                                <option value="price_asc" ${sortOption == 'price_asc' ? 'selected' : ''}><%= "vi".equals(language) ? "Giá tăng dần" : "Price Ascending" %></option>
-                                <option value="price_desc" ${sortOption == 'price_desc' ? 'selected' : ''}><%= "vi".equals(language) ? "Giá giảm dần" : "Price Descending" %></option>
-                                <option value="room_asc" ${sortOption == 'room_asc' ? 'selected' : ''}><%= "vi".equals(language) ? "Phòng tăng dần" : "Room Ascending" %></option>
-                                <option value="room_desc" ${sortOption == 'room_desc' ? 'selected' : ''}><%= "vi".equals(language) ? "Phòng giảm dần" : "Room Descending" %></option>
-                            </select>
-                        </div>
-                        <div class="flex items-end">
-                            <button type="submit" class="btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full">
-                                <%= "vi".equals(language) ? "Áp dụng" : "Apply" %>
-                            </button>
-                        </div>
-                    </form>
-                </section>
+                    <c:if test="${not empty error}">
+                        <p class="text-red-600 dark:text-red-400 text-lg text-center mb-4">${error}</p>
+                    </c:if>
 
-                <!-- Booking List -->
-                <section class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
-                        <%= "vi".equals(language) ? "Danh sách đặt phòng" : "Booking List" %>
-                    </h2>
-                    <c:choose>
-                        <c:when test="${empty bookings}">
-                            <p class="text-gray-600 dark:text-gray-300"><%= "vi".equals(language) ? "Bạn chưa có đặt phòng nào." : "You have no bookings yet." %></p>
-                        </c:when>
-                        <c:otherwise>
-                            <table class="w-full text-left">
-                                <thead>
-                                    <tr class="border-b dark:border-gray-700">
-                                        <th class="py-2 text-gray-900 dark:text-white"><%= "vi".equals(language) ? "Phòng" : "Room" %></th>
-                                        <th class="py-2 text-gray-900 dark:text-white"><%= "vi".equals(language) ? "Ngày nhận phòng" : "Check-in" %></th>
-                                        <th class="py-2 text-gray-900 dark:text-white"><%= "vi".equals(language) ? "Ngày trả phòng" : "Check-out" %></th>
-                                        <th class="py-2 text-gray-900 dark:text-white"><%= "vi".equals(language) ? "Tổng giá" : "Total Price" %></th>
-                                        <th class="py-2 text-gray-900 dark:text-white"><%= "vi".equals(language) ? "Trạng thái" : "Status" %></th>
-                                        <th class="py-2 text-gray-900 dark:text-white"><%= "vi".equals(language) ? "Hành động" : "Action" %></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                <c:forEach var="booking" items="${bookings}">
-                                    <tr class="border-b dark:border-gray-700">
-                                        <td class="py-2 text-gray-600 dark:text-gray-300">${booking.room.roomNumber} - ${booking.room.roomType.typeName}</td>
-                                        <td class="py-2 text-gray-600 dark:text-gray-300"><fmt:formatDate value="${booking.checkInDate}" pattern="dd/MM/yyyy" /></td>
-                                    <td class="py-2 text-gray-600 dark:text-gray-300"><fmt:formatDate value="${booking.checkOutDate}" pattern="dd/MM/yyyy" /></td>
-                                    <td class="py-2 text-gray-600 dark:text-gray-300"><fmt:formatNumber value="${booking.totalPrice}" type="number" pattern="#,###" /> VND</td>
-                                    <td class="py-2">
-                                        <span class="${booking.status == 'Pending' ? 'text-yellow-500' : booking.status == 'Confirmed' ? 'text-green-500' : 'text-red-500'}">
-                                            <%= "vi".equals(language) ?
-                                                ("Pending".equals(((com.mycompany.oceanichotel.models.Booking)pageContext.getAttribute("booking")).getStatus()) ? "Đang chờ" :
-                                                 "Confirmed".equals(((com.mycompany.oceanichotel.models.Booking)pageContext.getAttribute("booking")).getStatus()) ? "Đã xác nhận" : "Đã hủy") :
-                                                ((com.mycompany.oceanichotel.models.Booking)pageContext.getAttribute("booking")).getStatus() %>
-                                        </span>
-                                    </td>
-                                    <td class="py-2">
-                                    <c:choose>
-                                        <c:when test="${booking.status == 'Pending' && booking.canCancel}">
-                                            <p class="text-gray-600 dark:text-gray-300 mb-2">
-                                                <%= "vi".equals(language) ? "Thời gian thanh toán còn lại: " : "Remaining payment time: " %>
-                                                <%
-                                                    java.util.Date createdAt = ((com.mycompany.oceanichotel.models.Booking)pageContext.getAttribute("booking")).getCreatedAt();
-                                                    if (createdAt != null) {
-                                                        long diffInMillies = new java.util.Date().getTime() - createdAt.getTime();
-                                                        long hoursRemaining = 24 - TimeUnit.HOURS.convert(diffInMillies, TimeUnit.MILLISECONDS);
-                                                        long minutesRemaining = 15 - TimeUnit.MINUTES.convert(diffInMillies, TimeUnit.MILLISECONDS);
-                                                            out.print(minutesRemaining > 0 ? minutesRemaining + " minutes" : "Đã hết hạn");
-//                                                        out.print(hoursRemaining > 0 ? hoursRemaining + " giờ" : "Đã hết hạn");
-                                                    } else {
-                                                        out.print("N/A");
-                                                    }
-                                                %>
-                                            </p>
-                                            <form action="<%= request.getContextPath() %>/user/bookings" method="post" onsubmit="return confirm('<%= "vi".equals(language) ? "Bạn có chắc muốn hủy đặt phòng này không?" : "Are you sure you want to cancel this booking?" %>');" style="display:inline;">
-                                                <input type="hidden" name="action" value="cancel">
-                                                <input type="hidden" name="bookingId" value="${booking.bookingId}">
-                                                <button type="submit" class="btn bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
-                                                    <%= "vi".equals(language) ? "Hủy" : "Cancel" %>
-                                                </button>
-                                            </form>
-                                            <button onclick="showPaymentOptions('${booking.bookingId}', '${booking.totalPrice}')" class="btn bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">
-                                                <%= "vi".equals(language) ? "Thanh toán" : "Pay Now" %>
-                                            </button>
-                                            <c:if test="${booking.hasPendingTransaction}">
-                                                <form action="<%= request.getContextPath() %>/user/bookings" method="post" onsubmit="return confirm('<%= "vi".equals(language) ? "Xác nhận thanh toán MoMo cho booking này?" : "Confirm MoMo payment for this booking?" %>');" style="display:inline;">
-                                                    <input type="hidden" name="action" value="confirmMoMo">
-                                                    <input type="hidden" name="bookingId" value="${booking.bookingId}">
-                                                    <button type="submit" class="btn bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
-                                                        <%= "vi".equals(language) ? "Xác nhận" : "Confirm" %>
-                                                    </button>
-                                                </form>
-                                            </c:if>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <span class="text-gray-500"><%= "vi".equals(language) ? "Không có hành động" : "No actions available" %></span>
-                                        </c:otherwise>
-                                    </c:choose>
-                                    </td>
-                                    </tr>
-                                </c:forEach>
-                                </tbody>
-                            </table>
-                        </c:otherwise>
-                    </c:choose>
-                </section>
+                    <!-- Filter Section -->
+                    <section class="mt-6">
+                        <h2><%= "vi".equals(language) ? "Lọc và sắp xếp" : "Filter and Sort" %></h2>
+                        <form method="get" action="<%= request.getContextPath() %>/user/bookings" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                            <div>
+                                <label class="block"><%= "vi".equals(language) ? "Trạng thái" : "Status" %></label>
+                                <select name="statusFilter" class="w-full">
+                                    <option value=""><%= "vi".equals(language) ? "Tất cả" : "All" %></option>
+                                    <option value="Pending" ${statusFilter == 'Pending' ? 'selected' : ''}>Pending</option>
+                                    <option value="Confirmed" ${statusFilter == 'Confirmed' ? 'selected' : ''}>Confirmed</option>
+                                    <option value="Cancelled" ${statusFilter == 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block"><%= "vi".equals(language) ? "Từ ngày nhận" : "Check-in From" %></label>
+                                <input type="date" name="checkInFrom" value="${checkInFrom}">
+                            </div>
+                            <div>
+                                <label class="block"><%= "vi".equals(language) ? "Đến ngày nhận" : "Check-in To" %></label>
+                                <input type="date" name="checkInTo" value="${checkInTo}">
+                            </div>
+                            <div>
+                                <label class="block"><%= "vi".equals(language) ? "Sắp xếp" : "Sort" %></label>
+                                <select name="sortOption" class="w-full">
+                                    <option value="newest" ${sortOption == 'newest' ? 'selected' : ''}><%= "vi".equals(language) ? "Mới nhất" : "Newest" %></option>
+                                    <option value="oldest" ${sortOption == 'oldest' ? 'selected' : ''}><%= "vi".equals(language) ? "Cũ nhất" : "Oldest" %></option>
+                                    <option value="price_asc" ${sortOption == 'price_asc' ? 'selected' : ''}><%= "vi".equals(language) ? "Giá tăng dần" : "Price Ascending" %></option>
+                                    <option value="price_desc" ${sortOption == 'price_desc' ? 'selected' : ''}><%= "vi".equals(language) ? "Giá giảm dần" : "Price Descending" %></option>
+                                    <option value="room_asc" ${sortOption == 'room_asc' ? 'selected' : ''}><%= "vi".equals(language) ? "Phòng tăng dần" : "Room Ascending" %></option>
+                                    <option value="room_desc" ${sortOption == 'room_desc' ? 'selected' : ''}><%= "vi".equals(language) ? "Phòng giảm dần" : "Room Descending" %></option>
+                                </select>
+                            </div>
+                            <div class="flex items-end">
+                                <button type="submit" class="btn w-full"><%= "vi".equals(language) ? "Áp dụng" : "Apply" %></button>
+                            </div>
+                        </form>
+                    </section>
 
-                <!-- Modal chọn phương thức thanh toán -->
-                <div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-                    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
-                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                            <%= "vi".equals(language) ? "Chọn phương thức thanh toán" : "Select Payment Method" %>
-                        </h3>
-                        <input type="hidden" id="modalBookingId" value="">
-                        <input type="hidden" id="modalTotalPrice" value="">
-                        <div class="space-y-4">
-                            <!-- Thanh toán Test -->
-                            <button onclick="payTest()" class="btn bg-yellow-500 text-white w-full py-2 rounded hover:bg-yellow-600">
-                                <%= "vi".equals(language) ? "Thanh toán Test (Xác nhận ngay)" : "Pay Test (Confirm Immediately)" %>
-                            </button>
-                            <!-- Thanh toán tại khách sạn -->
-                            <button onclick="payAtHotel()" class="btn bg-blue-500 text-white w-full py-2 rounded hover:bg-blue-600">
-                                <%= "vi".equals(language) ? "Thanh toán tại khách sạn" : "Pay at Hotel" %>
-                            </button>
-                            <!-- Thanh toán bằng mã QR -->
-                            <button onclick="payWithQR()" class="btn bg-gray-500 text-white w-full py-2 rounded hover:bg-gray-600">
-                                <%= "vi".equals(language) ? "Thanh toán bằng mã QR" : "Pay with QR Code" %>
-                            </button>
-                            <!-- Thanh toán qua MoMo -->
-                            <button onclick="payWithMoMo()" class="btn bg-pink-500 text-white w-full py-2 rounded hover:bg-pink-600">
-                                <%= "vi".equals(language) ? "Thanh toán qua MoMo" : "Pay with MoMo" %>
-                            </button>
-                        </div>
-                        <button onclick="closePaymentModal()" class="mt-4 text-gray-600 dark:text-gray-300 underline">
-                            <%= "vi".equals(language) ? "Đóng" : "Close" %>
-                        </button>
-                    </div>
+                    <!-- Booking List -->
+                    <section class="mt-6">
+                        <h2><%= "vi".equals(language) ? "Danh sách đặt phòng" : "Booking List" %></h2>
+                        <c:choose>
+                            <c:when test="${empty bookings}">
+                                <p><%= "vi".equals(language) ? "Bạn chưa có đặt phòng nào." : "You have no bookings yet." %></p>
+                            </c:when>
+                            <c:otherwise>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th><%= "vi".equals(language) ? "Phòng" : "Room" %></th>
+                                            <th><%= "vi".equals(language) ? "Ngày nhận phòng" : "Check-in" %></th>
+                                            <th><%= "vi".equals(language) ? "Ngày trả phòng" : "Check-out" %></th>
+                                            <th><%= "vi".equals(language) ? "Tổng giá" : "Total Price" %></th>
+                                            <th><%= "vi".equals(language) ? "Trạng thái" : "Status" %></th>
+                                            <th><%= "vi".equals(language) ? "Hành động" : "Action" %></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    <c:forEach var="booking" items="${bookings}">
+                                        <tr>
+                                            <td>${booking.room.roomNumber} - ${booking.room.roomType.typeName}</td>
+                                            <td><fmt:formatDate value="${booking.checkInDate}" pattern="dd/MM/yyyy" /></td>
+                                            <td><fmt:formatDate value="${booking.checkOutDate}" pattern="dd/MM/yyyy" /></td>
+                                            <td><fmt:formatNumber value="${booking.totalPrice}" type="number" pattern="#,###" /> VND</td>
+                                            <td>
+                                                <span class="${booking.status == 'Pending' ? 'text-yellow-500' : booking.status == 'Confirmed' ? 'text-green-500' : 'text-red-500'}">
+                                                    <%= "vi".equals(language) ?
+                                                        ("CLUDESPending".equals(((com.mycompany.oceanichotel.models.Booking)pageContext.getAttribute("booking")).getStatus()) ? "Đang chờ" :
+                                                         "Confirmed".equals(((com.mycompany.oceanichotel.models.Booking)pageContext.getAttribute("booking")).getStatus()) ? "Đã xác nhận" : "Đã hủy") :
+                                                        ((com.mycompany.oceanichotel.models.Booking)pageContext.getAttribute("booking")).getStatus() %>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <c:choose>
+                                                    <c:when test="${booking.status == 'Pending' && booking.canCancel}">
+                                                        <p class="mb-2">
+                                                            <%= "vi".equals(language) ? "Thời gian thanh toán còn lại: " : "Remaining payment time: " %>
+                                                            <%
+                                                                java.util.Date createdAt = ((com.mycompany.oceanichotel.models.Booking)pageContext.getAttribute("booking")).getCreatedAt();
+                                                                if (createdAt != null) {
+                                                                    long diffInMillies = new java.util.Date().getTime() - createdAt.getTime();
+                                                                    long minutesRemaining = 15 - TimeUnit.MINUTES.convert(diffInMillies, TimeUnit.MILLISECONDS);
+                                                                    out.print(minutesRemaining > 0 ? minutesRemaining + " minutes" : "Đã hết hạn");
+                                                                } else {
+                                                                    out.print("N/A");
+                                                                }
+                                                            %>
+                                                        </p>
+                                                        <form action="<%= request.getContextPath() %>/user/bookings" method="post" onsubmit="return confirm('<%= "vi".equals(language) ? "Bạn có chắc muốn hủy đặt phòng này không?" : "Are you sure you want to cancel this booking?" %>');" style="display:inline;">
+                                                            <input type="hidden" name="action" value="cancel">
+                                                            <input type="hidden" name="bookingId" value="${booking.bookingId}">
+                                                            <button type="submit" class="btn bg-red-500 hover:bg-red-600"><%= "vi".equals(language) ? "Hủy" : "Cancel" %></button>
+                                                        </form>
+                                                        <button onclick="showPaymentOptions('${booking.bookingId}', '${booking.totalPrice}')" class="btn bg-green-500 hover:bg-green-600">
+                                                            <%= "vi".equals(language) ? "Thanh toán" : "Pay Now" %>
+                                                        </button>
+                                                        <c:if test="${booking.hasPendingTransaction}">
+                                                            <form action="<%= request.getContextPath() %>/user/bookings" method="post" onsubmit="return confirm('<%= "vi".equals(language) ? "Xác nhận thanh toán MoMo cho booking này?" : "Confirm MoMo payment for this booking?" %>');" style="display:inline;">
+                                                                <input type="hidden" name="action" value="confirmMoMo">
+                                                                <input type="hidden" name="bookingId" value="${booking.bookingId}">
+                                                                <button type="submit" class="btn bg-blue-500 hover:bg-blue-600"><%= "vi".equals(language) ? "Xác nhận" : "Confirm" %></button>
+                                                            </form>
+                                                        </c:if>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span><%= "vi".equals(language) ? "Không có hành động" : "No actions available" %></span>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
+                                    </tbody>
+                                </table>
+                            </c:otherwise>
+                        </c:choose>
+                    </section>
+
+                    <!-- Status Change History -->
+                    <section class="mt-6">
+                        <h2><%= "vi".equals(language) ? "Lịch sử thay đổi trạng thái" : "Status Change History" %></h2>
+                        <c:choose>
+                            <c:when test="${empty history}">
+                                <p><%= "vi".equals(language) ? "Chưa có lịch sử thay đổi trạng thái." : "No status change history yet." %></p>
+                            </c:when>
+                            <c:otherwise>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th><%= "vi".equals(language) ? "ID Đặt phòng" : "Booking ID" %></th>
+                                            <th><%= "vi".equals(language) ? "Thay đổi bởi" : "Changed By" %></th>
+                                            <th><%= "vi".equals(language) ? "Trạng thái cũ" : "Old Status" %></th>
+                                            <th><%= "vi".equals(language) ? "Trạng thái mới" : "New Status" %></th>
+                                            <th><%= "vi".equals(language) ? "Thời gian thay đổi" : "Changed At" %></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    <c:forEach var="history" items="${history}">
+                                        <tr>
+                                            <td>${history.bookingId}</td>
+                                            <td>${history.changedBy}</td>
+                                            <td>${history.oldStatus == null ? ("vi".equals(language) ? "Không có" : "N/A") : history.oldStatus}</td>
+                                            <td>${history.newStatus}</td>
+                                            <td><fmt:formatDate value="${history.changedAt}" pattern="dd/MM/yyyy HH:mm:ss" /></td>
+                                        </tr>
+                                    </c:forEach>
+                                    </tbody>
+                                </table>
+                            </c:otherwise>
+                        </c:choose>
+                    </section>
                 </div>
-
-                <!-- Modal hiển thị mã QR -->
-                <div id="qrModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-                    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md text-center">
-                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                            <%= "vi".equals(language) ? "Thanh toán bằng mã QR" : "Pay with QR Code" %>
-                        </h3>
-                        <p class="text-gray-600 dark:text-gray-300 mb-4">
-                            <%= "vi".equals(language) ? "Số tiền cần thanh toán: " : "Amount to pay: " %>
-                            <span id="qrTotalPrice"></span> VND
-                        </p>
-                        <img src="<%= request.getContextPath() %>/assets/images/qr.jpg" alt="QR Code" class="mx-auto mb-4 w-48 h-48">
-                        <p class="text-gray-600 dark:text-gray-300">
-                            <%= "vi".equals(language) ? "Thông tin thanh toán: " : "Payment details: " %><br>
-                            Booking ID: <span id="qrBookingId"></span><br>
-                            <%= "vi".equals(language) ? "Vui lòng quét mã QR và liên hệ Admin để xác nhận sau khi thanh toán." : "Please scan the QR code and contact Admin to confirm after payment." %>
-                        </p>
-                        <button onclick="closeQRModal()" class="mt-4 text-gray-600 dark:text-gray-300 underline">
-                            <%= "vi".equals(language) ? "Đóng" : "Close" %>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Status Change History -->
-                <section class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mt-6">
-                    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
-                        <%= "vi".equals(language) ? "Lịch sử thay đổi trạng thái" : "Status Change History" %>
-                    </h2>
-                    <c:choose>
-                        <c:when test="${empty history}">
-                            <p class="text-gray-600 dark:text-gray-300"><%= "vi".equals(language) ? "Chưa có lịch sử thay đổi trạng thái." : "No status change history yet." %></p>
-                        </c:when>
-                        <c:otherwise>
-                            <table class="w-full text-left">
-                                <thead>
-                                    <tr class="border-b dark:border-gray-700">
-                                        <th class="py-2 text-gray-900 dark:text-white"><%= "vi".equals(language) ? "ID Đặt phòng" : "Booking ID" %></th>
-                                        <th class="py-2 text-gray-900 dark:text-white"><%= "vi".equals(language) ? "Thay đổi bởi" : "Changed By" %></th>
-                                        <th class="py-2 text-gray-900 dark:text-white"><%= "vi".equals(language) ? "Trạng thái cũ" : "Old Status" %></th>
-                                        <th class="py-2 text-gray-900 dark:text-white"><%= "vi".equals(language) ? "Trạng thái mới" : "New Status" %></th>
-                                        <th class="py-2 text-gray-900 dark:text-white"><%= "vi".equals(language) ? "Thời gian thay đổi" : "Changed At" %></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                <c:forEach var="history" items="${history}">
-                                    <tr class="border-b dark:border-gray-700">
-                                        <td class="py-2 text-gray-600 dark:text-gray-300">${history.bookingId}</td>
-                                        <td class="py-2 text-gray-600 dark:text-gray-300">${history.changedBy}</td>
-                                        <td class="py-2 text-gray-600 dark:text-gray-300">${history.oldStatus == null ? ("vi".equals(language) ? "Không có" : "N/A") : history.oldStatus}</td>
-                                        <td class="py-2 text-gray-600 dark:text-gray-300">${history.newStatus}</td>
-                                        <td class="py-2 text-gray-600 dark:text-gray-300"><fmt:formatDate value="${history.changedAt}" pattern="dd/MM/yyyy HH:mm:ss" /></td>
-                                    </tr>
-                                </c:forEach>
-                                </tbody>
-                            </table>
-                        </c:otherwise>
-                    </c:choose>
-                </section>
             </main>
 
-            <!-- Footer -->
-            <footer class="bg-gray-900 dark:bg-gray-800 text-white py-6 mt-12">
-                <div class="container mx-auto px-4 text-center">
-                    <p>© 2025 Oceanic Hotel. <%= "vi".equals(language) ? "Mọi quyền được bảo lưu." : "All rights reserved." %></p>
-                    <div class="mt-2">
-                        <a href="#" class="text-gray-400 hover:text-white mx-2"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="text-gray-400 hover:text-white mx-2"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="text-gray-400 hover:text-white mx-2"><i class="fab fa-twitter"></i></a>
+            <!-- Modal chọn phương thức thanh toán -->
+            <div id="paymentModal" class="payment-modal">
+                <div class="modal-box">
+                    <h3 class="text-xl font-semibold"><%= "vi".equals(language) ? "Chọn phương thức thanh toán" : "Select Payment Method" %></h3>
+                    <input type="hidden" id="modalBookingId" value="">
+                    <input type="hidden" id="modalTotalPrice" value="">
+                    <div class="space-y-4 mt-4">
+                        <button onclick="payTest()" class="btn bg-yellow-500 hover:bg-yellow-600 w-full"><%= "vi".equals(language) ? "Thanh toán Test (Xác nhận ngay)" : "Pay Test (Confirm Immediately)" %></button>
+                        <button onclick="payAtHotel()" class="btn bg-blue-500 hover:bg-blue-600 w-full"><%= "vi".equals(language) ? "Thanh toán tại khách sạn" : "Pay at Hotel" %></button>
+                        <button onclick="payWithQR()" class="btn bg-gray-500 hover:bg-gray-600 w-full"><%= "vi".equals(language) ? "Thanh toán bằng mã QR" : "Pay with QR Code" %></button>
+                        <button onclick="payWithMoMo()" class="btn bg-pink-500 hover:bg-pink-600 w-full"><%= "vi".equals(language) ? "Thanh toán qua MoMo" : "Pay with MoMo" %></button>
                     </div>
+                    <button onclick="closePaymentModal()" class="mt-4 text-gray-600 dark:text-gray-300 underline"><%= "vi".equals(language) ? "Đóng" : "Close" %></button>
+                </div>
+            </div>
+
+            <!-- Modal hiển thị mã QR -->
+            <div id="qrModal" class="qr-modal">
+                <div class="modal-box">
+                    <h3 class="text-xl font-semibold"><%= "vi".equals(language) ? "Thanh toán bằng mã QR" : "Pay with QR Code" %></h3>
+                    <p class="mt-4"><%= "vi".equals(language) ? "Số tiền cần thanh toán: " : "Amount to pay: " %><span id="qrTotalPrice"></span> VND</p>
+                    <img src="<%= request.getContextPath() %>/assets/images/qr.jpg" alt="QR Code" class="mx-auto my-4 w-48 h-48">
+                    <p><%= "vi".equals(language) ? "Thông tin thanh toán: " : "Payment details: " %><br>Booking ID: <span id="qrBookingId"></span><br>
+                        <%= "vi".equals(language) ? "Vui lòng quét mã QR và liên hệ Admin để xác nhận sau khi thanh toán." : "Please scan the QR code and contact Admin to confirm after payment." %>
+                    </p>
+                    <button onclick="closeQRModal()" class="mt-4 text-gray-600 dark:text-gray-300 underline"><%= "vi".equals(language) ? "Đóng" : "Close" %></button>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer>
+                <p>© 2025 Oceanic Hotel. <%= "vi".equals(language) ? "Mọi quyền được bảo lưu." : "All rights reserved." %></p>
+                <div class="mt-2">
+                    <a href="#" class="text-gray-400 hover:text-white mx-2"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white mx-2"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white mx-2"><i class="fab fa-twitter"></i></a>
                 </div>
             </footer>
         </div>
 
         <script>
+            function showModal() {
+                const modal = document.getElementById('avatarModal');
+                modal.style.display = 'block';
+                modal.onclick = function () {
+                    modal.style.display = 'none';
+                }
+            }
+
             function changeLanguage(lang) {
-                fetch('<%= request.getContextPath() %>/language', {
+                fetch('<%= request.getContextPath() %>/user/change-language', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                     body: 'language=' + encodeURIComponent(lang)
-                }).then(() => location.reload());
+                }).then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        console.error('Lỗi khi thay đổi ngôn ngữ: ' + response.status);
+                    }
+                }).catch(error => console.error('Lỗi mạng: ', error));
             }
 
-            function changeTheme(theme) {
-                fetch('<%= request.getContextPath() %>/theme', {
+            function changeTheme(newTheme) {
+                fetch('<%= request.getContextPath() %>/user/change-theme', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: 'theme=' + encodeURIComponent(theme)
-                }).then(() => {
-                    document.body.classList.toggle('dark-mode', theme === 'dark');
-                });
+                    body: 'theme=' + encodeURIComponent(newTheme)
+                }).then(response => {
+                    if (response.ok) {
+                        document.body.classList.toggle('dark-mode', newTheme === 'dark');
+                        const themeIcon = document.querySelector('#themeToggle i');
+                        themeIcon.className = 'fas ' + (newTheme === 'dark' ? 'fa-sun' : 'fa-moon');
+                        document.getElementById('themeToggle').setAttribute('onclick', "changeTheme('" + (newTheme === 'dark' ? 'light' : 'dark') + "')");
+                    } else {
+                        console.error('Lỗi khi thay đổi chủ đề: ' + response.status);
+                    }
+                }).catch(error => console.error('Lỗi mạng: ', error));
             }
-
-            document.addEventListener('DOMContentLoaded', () => {
-                const elements = document.querySelectorAll('.animate-fade-in-down');
-                elements.forEach(el => {
-                    el.style.opacity = 0;
-                    el.style.transform = 'translateY(-20px)';
-                    setTimeout(() => {
-                        el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-                        el.style.opacity = 1;
-                        el.style.transform = 'translateY(0)';
-                    }, 100);
-                });
-            });
 
             function showPaymentOptions(bookingId, totalPrice) {
                 document.getElementById('modalBookingId').value = bookingId;
                 document.getElementById('modalTotalPrice').value = totalPrice;
-                document.getElementById('paymentModal').classList.remove('hidden');
+                document.getElementById('paymentModal').style.display = 'flex';
             }
 
             function closePaymentModal() {
-                document.getElementById('paymentModal').classList.add('hidden');
+                document.getElementById('paymentModal').style.display = 'none';
             }
 
             function payTest() {
@@ -401,18 +518,18 @@
                     document.getElementById('qrBookingId').textContent = bookingId;
                     document.getElementById('qrTotalPrice').textContent = totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                     closePaymentModal();
-                    document.getElementById('qrModal').classList.remove('hidden');
+                    document.getElementById('qrModal').style.display = 'flex';
                 });
             }
 
             function closeQRModal() {
-                document.getElementById('qrModal').classList.add('hidden');
+                document.getElementById('qrModal').style.display = 'none';
             }
 
             function payWithMoMo() {
                 let bookingId = document.getElementById('modalBookingId').value;
                 let totalPrice = document.getElementById('modalTotalPrice').value;
-                let momoLink = "https://me.momo.vn/0337090061?amount=" + totalPrice + "¬e=Thanh%20toan%20booking%20ID%20" + bookingId;
+                let momoLink = "https://me.momo.vn/0337090061?amount=" + totalPrice + "&note=Thanh%20toan%20booking%20ID%20" + bookingId;
                 let message = '<%= "vi".equals(language) ? "Vui lòng nhấp vào link để thanh toán qua MoMo:\\n" : "Please click the link to pay via MoMo:\\n" %>'
                         + "Link: <a href='" + momoLink + "' target='_blank'>" + momoLink + "</a><br>"
                         + '<%= "vi".equals(language) ? "Sau khi thanh toán, nhấn Xác nhận trên giao diện để hoàn tất." : "After payment, press Confirm on the interface to complete." %>';

@@ -1,6 +1,7 @@
 package com.mycompany.oceanichotel.services.admin;
 
 import com.mycompany.oceanichotel.utils.DatabaseUtil;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,7 +13,7 @@ public class AdminReportService {
 
     private static final Logger LOGGER = Logger.getLogger(AdminReportService.class.getName());
 
-    public double getRevenue(String reportType, Date startDate, Date endDate) throws SQLException {
+    public BigDecimal getRevenue(String reportType, Date startDate, Date endDate) throws SQLException { // Đổi từ double sang BigDecimal
         String query = "SELECT SUM(amount) FROM Transactions WHERE status = 'Success'";
         if (startDate != null && endDate != null) {
             query += " AND created_at BETWEEN ? AND ?";
@@ -30,11 +31,13 @@ public class AdminReportService {
                 stmt.setTimestamp(2, new java.sql.Timestamp(endDate.getTime()));
             }
             ResultSet rs = stmt.executeQuery();
-            if (rs.next()) return rs.getDouble(1);
+            if (rs.next()) {
+                BigDecimal revenue = rs.getBigDecimal(1);
+                return revenue != null ? revenue : BigDecimal.ZERO; // Tránh null
+            }
         }
-        return 0;
+        return BigDecimal.ZERO;
     }
-    
 
     public int getTotalRooms() throws SQLException {
         String query = "SELECT COUNT(*) FROM Rooms";

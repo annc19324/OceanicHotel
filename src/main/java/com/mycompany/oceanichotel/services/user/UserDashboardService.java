@@ -23,7 +23,7 @@ public class UserDashboardService {
                 booking.setRoomId(rs.getInt("room_id"));
                 booking.setCheckInDate(rs.getDate("check_in_date"));
                 booking.setCheckOutDate(rs.getDate("check_out_date"));
-                booking.setTotalPrice(rs.getDouble("total_price"));
+                booking.setTotalPrice(rs.getBigDecimal("total_price"));
                 booking.setStatus(rs.getString("status"));
                 bookings.add(booking);
             }

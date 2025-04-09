@@ -49,7 +49,6 @@ public class UserBookingsController extends HttpServlet {
             List<Booking> bookings = userBookingService.getUserBookings(
                 user.getUserId(), statusFilter, checkInFrom, checkInTo, sortOption
             );
-            // Kiểm tra xem booking có giao dịch MoMo Pending không
             for (Booking booking : bookings) {
                 boolean hasPendingTransaction = userBookingService.hasPendingMoMoTransaction(booking.getBookingId());
                 booking.setHasPendingTransaction(hasPendingTransaction);
@@ -106,11 +105,10 @@ public class UserBookingsController extends HttpServlet {
                 } else if ("qr".equals(method)) {
                     LOGGER.info("Booking ID=" + bookingId + " set for QR payment, status remains Pending.");
                 } else if ("momo".equals(method)) {
-                    int transactionId = userBookingService.createTransaction(bookingId, user.getUserId(), booking.getTotalPrice());
+                    int transactionId = userBookingService.createTransaction(bookingId, user.getUserId(), booking.getTotalPrice().doubleValue());
                     LOGGER.info("Transaction ID=" + transactionId + " created for MoMo payment for booking ID=" + bookingId);
                 }
             } else if ("confirmMoMo".equals(action)) {
-                // Xác nhận thanh toán MoMo
                 userBookingService.confirmMoMoPayment(bookingId, user.getUserId());
                 LOGGER.info("MoMo payment confirmed for booking ID=" + bookingId + " by userId=" + user.getUserId());
             }

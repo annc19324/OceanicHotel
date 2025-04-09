@@ -1,145 +1,79 @@
-Web Pages:
-
-WEB-INF/views/admin/add_room.jsp
-
-WEB-INF/views/admin/add_user.jsp
-
-WEB-INF/views/admin/booking.jsp
-
-WEB-INF/views/admin/dashboard.jsp
-
-WEB-INF/views/admin/edit_room.jsp
-
-WEB-INF/views/admin/edit_room_type.jsp
-
-WEB-INF/views/admin/edit_user.jsp
-
-WEB-INF/views/admin/login_history.jsp
-
-WEB-INF/views/admin/reports.jsp
-
-WEB-INF/views/admin/room_types.jsp
-
-WEB-INF/views/admin/rooms.jsp
-
-WEB-INF/views/admin/settings.jsp
-
-WEB-INF/views/admin/transactions.jsp
-
-WEB-INF/views/admin/users.jsp
-
-Public Pages:
-
-WEB-INF/views/public/dashboard.jsp
-
-WEB-INF/views/public/login.jsp
-
-WEB-INF/views/public/register.jsp
-
-WEB-INF/views/public/surpriseMotherFather.jsp
-
-Assets (CSS):
-
-assets/css/base.css
-
-assets/css/button.css
-
-assets/css/container.css
-
-assets/css/dashboard.css
-
-assets/css/form.css
-
-assets/css/main.css
-
-assets/css/modal.css
-
-assets/css/notification.css
-
-assets/css/reset.css
-
-assets/css/settings.css
-
-assets/css/sidebar.css
-
-assets/css/variables.css
-
-Assets (JS):
-
-assets/js/dropdown.js
-
-assets/js/error.js
-
-assets/js/language.js
-
-assets/js/main.js
-
-assets/js/modal.js
-
-assets/js/theme.js
-
-Source Packages (Java Controllers):
-
-com.oceanichotel.controller.AdminBookingController.java
-
-com.oceanichotel.controller.AdminDashboardController.java
-
-com.oceanichotel.controller.AdminRoomController.java
-
-com.oceanichotel.controller.AdminRoomTypeController.java
-
-com.oceanichotel.controller.AdminSettingsController.java
-
-com.oceanichotel.controller.AdminTransactionController.java
-
-com.oceanichotel.controller.AdminUserController.java
-
-com.oceanichotel.controller.RoomManagementController.java
-
-com.oceanichotel.controller.RoomTypeController.java
-
-com.oceanichotel.controller.SettingsServlet.java
-
-com.oceanichotel.controller.UserDashboardController.java
-
-Source Packages (Java Models):
-
-com.oceanichotel.model.Booking.java
-
-com.oceanichotel.model.LoginHistory.java
-
-com.oceanichotel.model.Room.java
-
-com.oceanichotel.model.RoomImage.java
-
-com.oceanichotel.model.RoomType.java
-
-com.oceanichotel.model.RoomTypeImage.java
-
-com.oceanichotel.model.Transaction.java
-
-com.oceanichotel.model.User.java
-
-Source Packages (Java Services):
-
-com.oceanichotel.service.AdminBookingService.java
-
-com.oceanichotel.service.AdminReportService.java
-
-com.oceanichotel.service.AdminRoomService.java
-
-com.oceanichotel.service.AdminRoomTypeService.java
-
-com.oceanichotel.service.AdminSettingsService.java
-
-com.oceanichotel.service.AdminTransactionService.java
-
-com.oceanichotel.service.AdminUserService.java
-
-com.oceanichotel.service.UserDashboardService.java
-
-com.oceanichotel.service.UserService.java
-
-Utility Classes:
-
-com.oceanichotel.utils.DatabaseUtil.java
+Web Pages/WEB-INF/views/admin/add_room.jsp
+Web Pages/WEB-INF/views/admin/add_room_type.jsp
+Web Pages/WEB-INF/views/admin/add_user.jsp
+Web Pages/WEB-INF/views/admin/bookings.jsp
+Web Pages/WEB-INF/views/admin/dashboard.jsp
+Web Pages/WEB-INF/views/admin/edit_room.jsp
+Web Pages/WEB-INF/views/admin/edit_room_type.jsp
+Web Pages/WEB-INF/views/admin/edit_user.jsp
+Web Pages/WEB-INF/views/admin/login_history.jsp
+Web Pages/WEB-INF/views/admin/reports.jsp
+Web Pages/WEB-INF/views/admin/room_types.jsp
+Web Pages/WEB-INF/views/admin/rooms.jsp
+Web Pages/WEB-INF/views/admin/settings.jsp
+Web Pages/WEB-INF/views/admin/transactions.jsp
+Web Pages/WEB-INF/views/admin/users.jsp
+Web Pages/WEB-INF/views/public/forgot_password.jsp
+Web Pages/WEB-INF/views/public/login.jsp
+Web Pages/WEB-INF/views/public/register.jsp
+
+Web Pages/WEB-INF/views/receptionist/dashboard.jsp
+
+Web Pages/WEB-INF/views/user/book_room.jsp
+Web Pages/WEB-INF/views/user/bookings.jsp
+Web Pages/WEB-INF/views/user/dashboard.jsp
+Web Pages/WEB-INF/views/user/payment.jsp
+Web Pages/WEB-INF/views/user/profile.jsp
+Web Pages/WEB-INF/views/user/room_details.jsp
+Web Pages/WEB-INF/views/user/rooms.jsp
+Web Pages/WEB-INF/beans.xml
+Web Pages/WEB-INF/web.xml
+
+Source Packages/com.mycompany.oceanichotel/JakartaRestConfiguration.java
+Source Packages/com.mycompany.oceanichotel.controllers.admin/AdminBookingController.java
+Source Packages/com.mycompany.oceanichotel.controllers.admin/AdminDashboardController.java
+Source Packages/com.mycompany.oceanichotel.controllers.admin/AdminReportController.java
+Source Packages/com.mycompany.oceanichotel.controllers.admin/AdminRoomController.java
+Source Packages/com.mycompany.oceanichotel.controllers.admin/AdminRoomTypeController.java
+Source Packages/com.mycompany.oceanichotel.controllers.admin/AdminSettingsController.java
+Source Packages/com.mycompany.oceanichotel.controllers.admin/AdminTransactionController.java
+Source Packages/com.mycompany.oceanichotel.controllers.admin/AdminUserController.java
+Source Packages/com.mycompany.oceanichotel.controllers.receptionist/ReceptionistDashboardController.java
+Source Packages/com.mycompany.oceanichotel.controllers.user/ErrorHandlerServlet.java
+Source Packages/com.mycompany.oceanichotel.controllers.user/ForgotPasswordController.java
+Source Packages/com.mycompany.oceanichotel.controllers.user/IndexServlet.java
+Source Packages/com.mycompany.oceanichotel.controllers.user/LoginController.java
+Source Packages/com.mycompany.oceanichotel.controllers.user/LogoutController.java
+Source Packages/com.mycompany.oceanichotel.controllers.user/RegisterController.java
+Source Packages/com.mycompany.oceanichotel.controllers.user/SettingsServlet.java
+Source Packages/com.mycompany.oceanichotel.controllers.user/UserBookingController.java
+Source Packages/com.mycompany.oceanichotel.controllers.user/UserBookingsController.java
+Source Packages/com.mycompany.oceanichotel.controllers.user/UserDashboardController.java
+Source Packages/com.mycompany.oceanichotel.controllers.user/UserPaymentController.java
+Source Packages/com.mycompany.oceanichotel.controllers.user/UserProfileController.java
+Source Packages/com.mycompany.oceanichotel.controllers.user/UserRoomDetailsController.java
+Source Packages/com.mycompany.oceanichotel.controllers.user/UserRoomController.java
+Source Packages/com.mycompany.oceanichotel.filters/AccessFilter.java
+Source Packages/com.mycompany.oceanichotel.models/Booking.java
+Source Packages/com.mycompany.oceanichotel.models/BookingHistory.java
+Source Packages/com.mycompany.oceanichotel.models/LoginHistory.java
+Source Packages/com.mycompany.oceanichotel.models/Room.java
+Source Packages/com.mycompany.oceanichotel.models/RoomType.java
+Source Packages/com.mycompany.oceanichotel.models/RoomTypeImage.java
+Source Packages/com.mycompany.oceanichotel.models/Transaction.java
+Source Packages/com.mycompany.oceanichotel.models/User.java
+Source Packages/com.mycompany.oceanichotel.resources/JakartaEE10Resource.java
+Source Packages/com.mycompany.oceanichotel.services.admin/AdminBookingService.java
+Source Packages/com.mycompany.oceanichotel.services.admin/AdminReportService.java
+Source Packages/com.mycompany.oceanichotel.services.admin/AdminRoomService.java
+Source Packages/com.mycompany.oceanichotel.services.admin/AdminRoomTypeService.java
+Source Packages/com.mycompany.oceanichotel.services.admin/AdminSettingsService.java
+Source Packages/com.mycompany.oceanichotel.services.admin/AdminTransactionService.java
+Source Packages/com.mycompany.oceanichotel.services.admin/AdminUserService.java
+Source Packages/com.mycompany.oceanichotel.services.user/UserBookingService.java
+Source Packages/com.mycompany.oceanichotel.services.user/UserDashboardService.java
+Source Packages/com.mycompany.oceanichotel.services.user/UserRoomDetailsService.java
+Source Packages/com.mycompany.oceanichotel.services.user/UserRoomService.java
+Source Packages/com.mycompany.oceanichotel.services.user/UserService.java
+Source Packages/com.mycompany.oceanichotel.utils/DatabaseUtil.java
+Source Packages/com.mycompany.oceanichotel.utils/SecurityUtil.java

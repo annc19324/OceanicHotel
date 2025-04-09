@@ -13,6 +13,8 @@ import jakarta.servlet.http.Part;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Logger;
@@ -22,6 +24,7 @@ import java.util.stream.Collectors;
 @WebServlet("/admin/room-types/*")
 @MultipartConfig(fileSizeThreshold = 1024 * 1024 * 2, maxFileSize = 1024 * 1024 * 10, maxRequestSize = 1024 * 1024 * 50)
 public class AdminRoomTypeController extends HttpServlet {
+
     private AdminRoomTypeService roomTypeService;
     private static final Logger LOGGER = Logger.getLogger(AdminRoomTypeController.class.getName());
     private static final String UPLOAD_DIR = "assets/images";
@@ -69,13 +72,15 @@ public class AdminRoomTypeController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String pathInfo = request.getPathInfo();
         String language = (String) request.getSession().getAttribute("language");
-        if (language == null) language = "en";
+        if (language == null) {
+            language = "en";
+        }
 
         try {
             if (pathInfo.equals("/add")) {
                 RoomType roomType = new RoomType();
                 roomType.setTypeName(request.getParameter("typeName"));
-                roomType.setDefaultPrice(Double.parseDouble(request.getParameter("defaultPrice")));
+                roomType.setDefaultPrice(new BigDecimal(request.getParameter("defaultPrice")));
                 roomType.setMaxAdults(Integer.parseInt(request.getParameter("maxAdults")));
                 roomType.setMaxChildren(Integer.parseInt(request.getParameter("maxChildren")));
                 roomType.setDescription(request.getParameter("description"));
@@ -85,7 +90,9 @@ public class AdminRoomTypeController extends HttpServlet {
                         .collect(Collectors.toList());
                 String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIR;
                 File uploadDir = new File(uploadPath);
-                if (!uploadDir.exists()) uploadDir.mkdirs();
+                if (!uploadDir.exists()) {
+                    uploadDir.mkdirs();
+                }
 
                 for (int i = 0; i < fileParts.size(); i++) {
                     Part filePart = fileParts.get(i);
@@ -94,7 +101,7 @@ public class AdminRoomTypeController extends HttpServlet {
                     filePart.write(file.getAbsolutePath());
                     RoomTypeImage image = new RoomTypeImage();
                     image.setImageUrl(fileName);
-                    image.setPrimary(i == 0);
+                    image.setIsPrimary(i == 0);
                     roomType.addImage(image);
                 }
 
@@ -125,7 +132,9 @@ public class AdminRoomTypeController extends HttpServlet {
 
                 String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIR;
                 File uploadDir = new File(uploadPath);
-                if (!uploadDir.exists()) uploadDir.mkdirs();
+                if (!uploadDir.exists()) {
+                    uploadDir.mkdirs();
+                }
 
                 boolean isFirstImage = existingRoomType.getImages().isEmpty();
                 for (int i = 0; i < fileParts.size(); i++) {
@@ -135,7 +144,7 @@ public class AdminRoomTypeController extends HttpServlet {
                     filePart.write(file.getAbsolutePath());
                     RoomTypeImage image = new RoomTypeImage();
                     image.setImageUrl(fileName);
-                    image.setPrimary(isFirstImage && i == 0);
+                    image.setIsPrimary(isFirstImage && i == 0);
                     roomTypeService.addRoomTypeImage(typeId, image);
                 }
                 response.sendRedirect(request.getContextPath() + "/admin/room-types/edit?typeId=" + typeId + "&message=image_upload_success");
@@ -144,7 +153,7 @@ public class AdminRoomTypeController extends HttpServlet {
                 RoomType roomType = new RoomType();
                 roomType.setTypeId(typeId);
                 roomType.setTypeName(request.getParameter("typeName"));
-                roomType.setDefaultPrice(Double.parseDouble(request.getParameter("defaultPrice")));
+                roomType.setDefaultPrice(new BigDecimal(request.getParameter("defaultPrice")));
                 roomType.setMaxAdults(Integer.parseInt(request.getParameter("maxAdults")));
                 roomType.setMaxChildren(Integer.parseInt(request.getParameter("maxChildren")));
                 roomType.setDescription(request.getParameter("description"));
@@ -153,18 +162,20 @@ public class AdminRoomTypeController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/admin/room-types?message=update_success");
             } else if (pathInfo.equals("/delete")) {
                 int typeId = Integer.parseInt(request.getParameter("typeId"));
-                RoomType roomType = roomTypeService.getRoomTypeById(typeId);
-                if (roomType != null) {
-                    for (RoomTypeImage image : roomType.getImages()) {
-                        File imageFile = new File(getServletContext().getRealPath("") + File.separator + UPLOAD_DIR + File.separator + image.getImageUrl());
-                        if (imageFile.exists() && !imageFile.delete()) {
-                            LOGGER.warning("Không thể xóa file ảnh: " + imageFile.getAbsolutePath());
-                        }
+                try {
+                    RoomType roomType = roomTypeService.getRoomTypeById(typeId);
+                    if (roomType != null) {
+                        roomTypeService.deleteRoomType(typeId); // Có thể ném SQLException
+                        response.sendRedirect(request.getContextPath() + "/admin/room-types?message=delete_success");
+                    } else {
+                        response.sendRedirect(request.getContextPath() + "/admin/room-types?error=type_not_found");
                     }
-                    roomTypeService.deleteRoomType(typeId);
-                    response.sendRedirect(request.getContextPath() + "/admin/room-types?message=delete_success");
-                } else {
-                    response.sendRedirect(request.getContextPath() + "/admin/room-types?error=type_not_found");
+                } catch (SQLException e) {
+                    LOGGER.log(Level.WARNING, "Failed to delete room type", e);
+                    String errorMsg = language.equals("vi")
+                            ? "Không thể xóa loại phòng vì đang được sử dụng bởi " + e.getMessage().split("by ")[1]
+                            : e.getMessage();
+                    response.sendRedirect(request.getContextPath() + "/admin/room-types?error=" + URLEncoder.encode(errorMsg, "UTF-8"));
                 }
             } else if (pathInfo.equals("/delete-image")) {
                 String imageIdStr = request.getParameter("imageId");
