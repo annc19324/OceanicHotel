@@ -108,7 +108,7 @@ public class AdminUserController extends HttpServlet {
                 }
 
                 Calendar dobCal = Calendar.getInstance();
-                dobCal.setLenient(false); // Không cho phép ngày không hợp lệ (như 31/02)
+                dobCal.setLenient(false);
                 try {
                     dobCal.set(year, month - 1, day);
                     Date dob = dobCal.getTime();
@@ -156,6 +156,8 @@ public class AdminUserController extends HttpServlet {
                         request.setAttribute("error", language.equals("vi") ? "Tên người dùng đã tồn tại!" : "Username already exists!");
                     } else if (e.getMessage().contains("Email already exists")) {
                         request.setAttribute("error", language.equals("vi") ? "Email đã tồn tại!" : "Email already exists!");
+                    } else if (e.getMessage().contains("CCCD already exists")) {
+                        request.setAttribute("error", language.equals("vi") ? "CCCD đã tồn tại!" : "CCCD already exists!");
                     } else {
                         throw e;
                     }
@@ -171,7 +173,7 @@ public class AdminUserController extends HttpServlet {
                 user.setUsername(request.getParameter("username"));
                 user.setEmail(request.getParameter("email"));
                 String password = request.getParameter("password");
-                if (password != null && !password.isEmpty()) {
+                if (password != null && !password.trim().isEmpty()) {
                     user.setPassword(password);
                 }
                 user.setFullName(request.getParameter("full_name"));
@@ -198,8 +200,8 @@ public class AdminUserController extends HttpServlet {
                     year = Integer.parseInt(dobYear);
                 } catch (NumberFormatException e) {
                     LOGGER.log(Level.WARNING, "Invalid date components: day=" + dobDay + ", month=" + dobMonth + ", year=" + dobYear, e);
-                    request.setAttribute("error", language.equals("vi") ? "Ngày sinh không hợp lệ!" : "Invalid date of birth!");
                     request.setAttribute("user", user);
+                    request.setAttribute("error", language.equals("vi") ? "Ngày sinh không hợp lệ!" : "Invalid date of birth!");
                     request.getRequestDispatcher("/WEB-INF/views/admin/edit_user.jsp").forward(request, response);
                     return;
                 }
@@ -212,8 +214,8 @@ public class AdminUserController extends HttpServlet {
                     user.setDateOfBirth(dob);
                 } catch (IllegalArgumentException e) {
                     LOGGER.log(Level.WARNING, "Invalid date: " + year + "-" + month + "-" + day, e);
-                    request.setAttribute("error", language.equals("vi") ? "Ngày sinh không hợp lệ (ví dụ: 31/02)!" : "Invalid date of birth (e.g., 31/02)!");
                     request.setAttribute("user", user);
+                    request.setAttribute("error", language.equals("vi") ? "Ngày sinh không hợp lệ (ví dụ: 31/02)!" : "Invalid date of birth (e.g., 31/02)!");
                     request.getRequestDispatcher("/WEB-INF/views/admin/edit_user.jsp").forward(request, response);
                     return;
                 }
@@ -227,14 +229,14 @@ public class AdminUserController extends HttpServlet {
                 }
 
                 if (dobCal.getTime().after(now) || dobCal.getTime().equals(now)) {
-                    request.setAttribute("error", language.equals("vi") ? "Ngày sinh không thể là hôm nay hoặc tương lai!" : "Date of birth cannot be today or future!");
                     request.setAttribute("user", user);
+                    request.setAttribute("error", language.equals("vi") ? "Ngày sinh không thể là hôm nay hoặc tương lai!" : "Date of birth cannot be today or future!");
                     request.getRequestDispatcher("/WEB-INF/views/admin/edit_user.jsp").forward(request, response);
                     return;
                 }
                 if (age < 16) {
-                    request.setAttribute("error", language.equals("vi") ? "Người dùng phải trên 16 tuổi!" : "User must be over 16 years old!");
                     request.setAttribute("user", user);
+                    request.setAttribute("error", language.equals("vi") ? "Người dùng phải trên 16 tuổi!" : "User must be over 16 years old!");
                     request.getRequestDispatcher("/WEB-INF/views/admin/edit_user.jsp").forward(request, response);
                     return;
                 }
@@ -246,14 +248,16 @@ public class AdminUserController extends HttpServlet {
                     userService.updateUser(user);
                     response.sendRedirect(request.getContextPath() + "/admin/users?message=update_success");
                 } catch (SQLException e) {
+                    request.setAttribute("user", user);
                     if (e.getMessage().contains("Username already exists")) {
                         request.setAttribute("error", language.equals("vi") ? "Tên người dùng đã tồn tại!" : "Username already exists!");
                     } else if (e.getMessage().contains("Email already exists")) {
                         request.setAttribute("error", language.equals("vi") ? "Email đã tồn tại!" : "Email already exists!");
+                    } else if (e.getMessage().contains("CCCD already exists")) {
+                        request.setAttribute("error", language.equals("vi") ? "CCCD đã tồn tại!" : "CCCD already exists!");
                     } else {
                         throw e;
                     }
-                    request.setAttribute("user", user);
                     request.getRequestDispatcher("/WEB-INF/views/admin/edit_user.jsp").forward(request, response);
                 }
             } else if (pathInfo.equals("/delete")) {

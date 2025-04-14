@@ -79,7 +79,7 @@
                     <input type="number" id="maxChildren" name="maxChildren" min="0" value="<%= room.getMaxChildren() %>" required>
                 </div>
                 <div class="form-group">
-                    <label for="isAvailable"><%= language.equals("vi") ? "Trạng thái" : "Available"%></label>
+                    <label for="isAvailable"><%= language.equals("vi") ? "Còn trống" : "Available"%></label>
                     <input type="checkbox" id="isAvailable" name="isAvailable" value="true" <%= room.isAvailable() ? "checked" : "" %>>
                 </div>
                 <div class="form-group">

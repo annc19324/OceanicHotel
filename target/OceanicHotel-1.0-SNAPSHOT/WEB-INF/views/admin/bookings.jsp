@@ -110,9 +110,6 @@
                                     <%= language.equals("vi") ? "Hủy" : "Cancel" %>
                                 </a>
                             <% } %>
-                            <a href="<%= request.getContextPath() %>/admin/bookings/history?bookingId=<%= booking.getBookingId() %>">
-                                <%= language.equals("vi") ? "Xem lịch sử" : "View History" %>
-                            </a>
                         </div>
                     </div>
                 </td>

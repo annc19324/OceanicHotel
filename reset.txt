@@ -1,7 +1,0 @@
-/*Reset style mặc định của trình duyệt (margin, padding, box-sizing, font)*/
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Arial', sans-serif;
-}

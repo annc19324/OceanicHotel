@@ -16,8 +16,7 @@ public class UserService {
     // Các phương thức hiện có giữ nguyên, chỉ thêm phương thức mới
     public String getUsernameByEmail(String email) throws SQLException {
         String query = "SELECT username FROM Users WHERE email = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, email);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -30,8 +29,7 @@ public class UserService {
     // Các phương thức khác như loginUser, isUsernameExists, resetPassword, v.v. giữ nguyên
     public User loginUser(String username, String password) throws SQLException {
         String query = "SELECT * FROM Users WHERE username = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, username);
             ResultSet rs = stmt.executeQuery();
 
@@ -264,6 +262,38 @@ public class UserService {
             int rowsAffected = stmt.executeUpdate();
             if (rowsAffected == 0) {
                 throw new SQLException("No user found with ID: " + user.getUserId());
+            }
+        }
+    }
+
+    public void changePassword(int userId, String currentPassword, String newPassword, String language) throws SQLException {
+        if (language == null) {
+            language = "en"; // Mặc định là tiếng Anh nếu không có language
+        }
+        String query = "SELECT password FROM Users WHERE user_id = ?";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, userId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                String hashedPassword = rs.getString("password");
+                if (!BCrypt.checkpw(currentPassword, hashedPassword)) {
+                    throw new SQLException(language.equals("vi") ? "Mật khẩu hiện tại không đúng!" : "Current password is incorrect!");
+                }
+                if (!isPasswordValid(newPassword)) {
+                    throw new SQLException(language.equals("vi") ? "Mật khẩu mới phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt!" : "New password must be at least 8 characters with uppercase, lowercase, number, and special character!");
+                }
+                String newHashedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+                String updateQuery = "UPDATE Users SET password = ? WHERE user_id = ?";
+                try (PreparedStatement updateStmt = conn.prepareStatement(updateQuery)) {
+                    updateStmt.setString(1, newHashedPassword);
+                    updateStmt.setInt(2, userId);
+                    int rowsAffected = updateStmt.executeUpdate();
+                    if (rowsAffected == 0) {
+                        throw new SQLException(language.equals("vi") ? "Không thể cập nhật mật khẩu!" : "Failed to update password!");
+                    }
+                }
+            } else {
+                throw new SQLException(language.equals("vi") ? "Không tìm thấy người dùng!" : "User not found!");
             }
         }
     }

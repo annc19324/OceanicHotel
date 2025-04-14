@@ -21,169 +21,35 @@
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
         <style>
-            body {
-                font-family: 'Poppins', sans-serif;
-                transition: background 0.3s ease, color 0.3s ease;
-                background: #f0f7fa;
-                color: #1e3a5f;
-            }
-            .dark-mode {
-                background: #1e3a5f;
-                color: #e6f0fa;
-            }
-            .header-bg {
-                background: #1e3a5f;
-                position: fixed;
-                width: 100%;
-                top: 0;
-                z-index: 10;
-                padding: 1rem 1.5rem;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                box-shadow: 0 2px 4px rgba(0, 51, 102, 0.2);
-            }
-            .header-bg a, .header-bg span {
-                color: #fff;
-                text-decoration: none;
-                cursor: pointer;
-            }
-            .header-bg a:hover, .header-bg span:hover {
-                color: #a3bffa;
-            }
-            .content-section {
-                margin-top: 100px;
-                padding: 15px;
-                background: #fff;
-                border-radius: 8px;
-                box-shadow: 0 2px 4px rgba(0, 51, 102, 0.2);
-            }
-            .dark-mode .content-section {
-                background: #2c5282;
-            }
-            h1, h2 {
-                font-size: 1.5rem;
-                text-align: center;
-                margin-bottom: 15px;
-            }
-            .dark-mode h1, .dark-mode h2 {
-                color: #e6f0fa;
-            }
-            table {
-                width: 100%;
-                border-collapse: collapse;
-            }
-            th, td {
-                padding: 8px;
-                text-align: left;
-                border-bottom: 1px solid #ccc;
-            }
-            .dark-mode th, .dark-mode td {
-                border-bottom: 1px solid #a3bffa;
-                color: #e6f0fa;
-            }
-            th {
-                background: #f0f7fa;
-            }
-            .dark-mode th {
-                background: #4a6f9c;
-            }
-            .btn {
-                background: #2b6cb0;
-                color: #fff;
-                padding: 6px 12px;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                transition: background 0.2s;
-            }
-            .btn:hover {
-                background: #1e4976;
-            }
-            .dark-mode .btn {
-                background: #2b6cb0;
-            }
-            .dark-mode .btn:hover {
-                background: #1e4976;
-            }
-            select, input[type="date"] {
-                width: 100%;
-                padding: 6px;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                background: #fff;
-                color: #1e3a5f;
-            }
-            .dark-mode select, .dark-mode input[type="date"] {
-                background: #4a6f9c;
-                border-color: #a3bffa;
-                color: #e6f0fa;
-            }
-            .avatar {
-                width: 48px;
-                height: 48px;
-                border-radius: 50%;
-                object-fit: cover;
-                cursor: pointer;
-            }
-            .avatar-container {
-                display: flex;
-                align-items: center;
-            }
-            .modal {
-                display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0,0,0,0.8);
-                z-index: 1000;
-            }
-            .modal-content {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                max-width: 90%;
-                max-height: 90%;
-            }
-            .modal-image {
-                width: 300px;
-                height: auto;
-                border-radius: 10px;
-            }
-            .payment-modal, .qr-modal {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0,0,0,0.8);
-                display: none;
-                justify-content: center;
-                align-items: center;
-                z-index: 50;
-            }
-            .modal-box {
-                background: #fff;
-                padding: 20px;
-                border-radius: 8px;
-                max-width: 400px;
-                width: 100%;
-                text-align: center;
-            }
-            .dark-mode .modal-box {
-                background: #2c5282;
-                color: #e6f0fa;
-            }
-            footer {
-                background: #1e3a5f;
-                color: #fff;
-                padding: 1.5rem;
-                text-align: center;
-                margin-top: 20px;
-            }
+            body { font-family: 'Poppins', sans-serif; transition: background 0.3s ease, color 0.3s ease; background: #f0f7fa; color: #1e3a5f; }
+            .dark-mode { background: #1e3a5f; color: #e6f0fa; }
+            .header-bg { background: #1e3a5f; position: fixed; width: 100%; top: 0; z-index: 10; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0, 51, 102, 0.2); }
+            .header-bg a, .header-bg span { color: #fff; text-decoration: none; cursor: pointer; }
+            .header-bg a:hover, .header-bg span:hover { color: #a3bffa; }
+            .content-section { margin-top: 100px; padding: 15px; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 51, 102, 0.2); }
+            .dark-mode .content-section { background: #2c5282; }
+            h1, h2 { font-size: 1.5rem; text-align: center; margin-bottom: 15px; }
+            .dark-mode h1, .dark-mode h2 { color: #e6f0fa; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ccc; }
+            .dark-mode th, .dark-mode td { border-bottom: 1px solid #a3bffa; color: #e6f0fa; }
+            th { background: #f0f7fa; }
+            .dark-mode th { background: #4a6f9c; }
+            .btn { background: #2b6cb0; color: #fff; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
+            .btn:hover { background: #1e4976; }
+            .dark-mode .btn { background: #2b6cb0; }
+            .dark-mode .btn:hover { background: #1e4976; }
+            select, input[type="date"] { width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; background: #fff; color: #1e3a5f; }
+            .dark-mode select, .dark-mode input[type="date"] { background: #4a6f9c; border-color: #a3bffa; color: #e6f0fa; }
+            .avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; cursor: pointer; }
+            .avatar-container { display: flex; align-items: center; }
+            .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 1000; }
+            .modal-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-width: 90%; max-height: 90%; }
+            .modal-image { width: 300px; height: auto; border-radius: 10px; }
+            .payment-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 50; }
+            .modal-box { background: #fff; padding: 20px; border-radius: 8px; max-width: 400px; width: 100%; text-align: center; }
+            .dark-mode .modal-box { background: #2c5282; color: #e6f0fa; }
+            footer { background: #1e3a5f; color: #fff; padding: 1.5rem; text-align: center; margin-top: 20px; }
         </style>
     </head>
     <body class="<%= "dark".equals(theme) ? "dark-mode" : "" %>">
@@ -198,6 +64,7 @@
                     <nav class="flex items-center space-x-6">
                         <a href="<%= request.getContextPath() %>/user/profile" class="text-white hover:text-blue-300 transition"><%= "vi".equals(language) ? "Hồ sơ" : "Profile" %></a>
                         <a href="<%= request.getContextPath() %>/user/bookings" class="text-white hover:text-blue-300 transition"><%= "vi".equals(language) ? "Đặt phòng" : "Bookings" %></a>
+                        <a href="<%= request.getContextPath() %>/user/change-password"><%= language.equals("vi") ? "Đổi mật khẩu" : "Change Password" %></a>
                         <a href="<%= request.getContextPath() %>/logout" class="text-white hover:text-blue-300 transition"><%= "vi".equals(language) ? "Đăng xuất" : "Logout" %></a>
                         <span id="languageToggle" class="language-toggle text-white" onclick="changeLanguage('<%= "vi".equals(language) ? "en" : "vi" %>')">
                             <i class="fas fa-globe mr-1"></i><%= "vi".equals(language) ? "EN" : "VI" %>
@@ -246,9 +113,9 @@
                                 <label class="block"><%= "vi".equals(language) ? "Trạng thái" : "Status" %></label>
                                 <select name="statusFilter" class="w-full">
                                     <option value=""><%= "vi".equals(language) ? "Tất cả" : "All" %></option>
-                                    <option value="Pending" ${statusFilter == 'Pending' ? 'selected' : ''}>Pending</option>
-                                    <option value="Confirmed" ${statusFilter == 'Confirmed' ? 'selected' : ''}>Confirmed</option>
-                                    <option value="Cancelled" ${statusFilter == 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                                    <option value="Pending" ${statusFilter == 'Pending' ? 'selected' : ''}><%= "vi".equals(language) ? "Đang chờ" : "Pending" %></option>
+                                    <option value="Confirmed" ${statusFilter == 'Confirmed' ? 'selected' : ''}><%= "vi".equals(language) ? "Đã xác nhận" : "Confirmed" %></option>
+                                    <option value="Cancelled" ${statusFilter == 'Cancelled' ? 'selected' : ''}><%= "vi".equals(language) ? "Đã hủy" : "Cancelled" %></option>
                                 </select>
                             </div>
                             <div>
@@ -304,48 +171,41 @@
                                             <td><fmt:formatNumber value="${booking.totalPrice}" type="number" pattern="#,###" /> VND</td>
                                             <td>
                                                 <span class="${booking.status == 'Pending' ? 'text-yellow-500' : booking.status == 'Confirmed' ? 'text-green-500' : 'text-red-500'}">
-                                                    <%= "vi".equals(language) ?
-                                                        ("CLUDESPending".equals(((com.mycompany.oceanichotel.models.Booking)pageContext.getAttribute("booking")).getStatus()) ? "Đang chờ" :
+                                                    <%= "vi".equals(language) ? 
+                                                        ("Pending".equals(((com.mycompany.oceanichotel.models.Booking)pageContext.getAttribute("booking")).getStatus()) ? "Đang chờ" :
                                                          "Confirmed".equals(((com.mycompany.oceanichotel.models.Booking)pageContext.getAttribute("booking")).getStatus()) ? "Đã xác nhận" : "Đã hủy") :
                                                         ((com.mycompany.oceanichotel.models.Booking)pageContext.getAttribute("booking")).getStatus() %>
                                                 </span>
                                             </td>
                                             <td>
-                                                <c:choose>
-                                                    <c:when test="${booking.status == 'Pending' && booking.canCancel}">
-                                                        <p class="mb-2">
-                                                            <%= "vi".equals(language) ? "Thời gian thanh toán còn lại: " : "Remaining payment time: " %>
-                                                            <%
-                                                                java.util.Date createdAt = ((com.mycompany.oceanichotel.models.Booking)pageContext.getAttribute("booking")).getCreatedAt();
-                                                                if (createdAt != null) {
-                                                                    long diffInMillies = new java.util.Date().getTime() - createdAt.getTime();
-                                                                    long minutesRemaining = 15 - TimeUnit.MINUTES.convert(diffInMillies, TimeUnit.MILLISECONDS);
-                                                                    out.print(minutesRemaining > 0 ? minutesRemaining + " minutes" : "Đã hết hạn");
-                                                                } else {
-                                                                    out.print("N/A");
-                                                                }
-                                                            %>
-                                                        </p>
-                                                        <form action="<%= request.getContextPath() %>/user/bookings" method="post" onsubmit="return confirm('<%= "vi".equals(language) ? "Bạn có chắc muốn hủy đặt phòng này không?" : "Are you sure you want to cancel this booking?" %>');" style="display:inline;">
-                                                            <input type="hidden" name="action" value="cancel">
-                                                            <input type="hidden" name="bookingId" value="${booking.bookingId}">
-                                                            <button type="submit" class="btn bg-red-500 hover:bg-red-600"><%= "vi".equals(language) ? "Hủy" : "Cancel" %></button>
-                                                        </form>
-                                                        <button onclick="showPaymentOptions('${booking.bookingId}', '${booking.totalPrice}')" class="btn bg-green-500 hover:bg-green-600">
-                                                            <%= "vi".equals(language) ? "Thanh toán" : "Pay Now" %>
-                                                        </button>
-                                                        <c:if test="${booking.hasPendingTransaction}">
-                                                            <form action="<%= request.getContextPath() %>/user/bookings" method="post" onsubmit="return confirm('<%= "vi".equals(language) ? "Xác nhận thanh toán MoMo cho booking này?" : "Confirm MoMo payment for this booking?" %>');" style="display:inline;">
-                                                                <input type="hidden" name="action" value="confirmMoMo">
-                                                                <input type="hidden" name="bookingId" value="${booking.bookingId}">
-                                                                <button type="submit" class="btn bg-blue-500 hover:bg-blue-600"><%= "vi".equals(language) ? "Xác nhận" : "Confirm" %></button>
-                                                            </form>
-                                                        </c:if>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <span><%= "vi".equals(language) ? "Không có hành động" : "No actions available" %></span>
-                                                    </c:otherwise>
-                                                </c:choose>
+                                            <c:choose>
+                                                <c:when test="${booking.status == 'Pending' && booking.canCancel}">
+                                                    <p class="mb-2">
+                                                        <%= "vi".equals(language) ? "Thời gian thanh toán còn lại: " : "Remaining payment time: " %>
+                                                        <%
+                                                            java.util.Date createdAt = ((com.mycompany.oceanichotel.models.Booking)pageContext.getAttribute("booking")).getCreatedAt();
+                                                            if (createdAt != null) {
+                                                                long diffInMillies = new java.util.Date().getTime() - createdAt.getTime();
+                                                                long minutesRemaining = 5 - TimeUnit.MINUTES.convert(diffInMillies, TimeUnit.MILLISECONDS);
+                                                                out.print(minutesRemaining > 0 ? minutesRemaining + " minutes" : "Đã hết hạn");
+                                                            } else {
+                                                                out.print("N/A");
+                                                            }
+                                                        %>
+                                                    </p>
+                                                    <form action="<%= request.getContextPath() %>/user/bookings" method="post" onsubmit="return confirm('<%= "vi".equals(language) ? "Bạn có chắc muốn hủy đặt phòng này không?" : "Are you sure you want to cancel this booking?" %>');" style="display:inline;">
+                                                        <input type="hidden" name="action" value="cancel">
+                                                        <input type="hidden" name="bookingId" value="${booking.bookingId}">
+                                                        <button type="submit" class="btn bg-red-500 hover:bg-red-600"><%= "vi".equals(language) ? "Hủy" : "Cancel" %></button>
+                                                    </form>
+                                                    <button onclick="showPaymentOptions('${booking.bookingId}', '${booking.totalPrice}')" class="btn bg-green-500 hover:bg-green-600">
+                                                        <%= "vi".equals(language) ? "Thanh toán" : "Pay Now" %>
+                                                    </button>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span><%= "vi".equals(language) ? "Không có hành động" : "No actions available" %></span>
+                                                </c:otherwise>
+                                            </c:choose>
                                             </td>
                                         </tr>
                                     </c:forEach>
@@ -398,25 +258,16 @@
                     <input type="hidden" id="modalBookingId" value="">
                     <input type="hidden" id="modalTotalPrice" value="">
                     <div class="space-y-4 mt-4">
-                        <button onclick="payTest()" class="btn bg-yellow-500 hover:bg-yellow-600 w-full"><%= "vi".equals(language) ? "Thanh toán Test (Xác nhận ngay)" : "Pay Test (Confirm Immediately)" %></button>
-                        <button onclick="payAtHotel()" class="btn bg-blue-500 hover:bg-blue-600 w-full"><%= "vi".equals(language) ? "Thanh toán tại khách sạn" : "Pay at Hotel" %></button>
-                        <button onclick="payWithQR()" class="btn bg-gray-500 hover:bg-gray-600 w-full"><%= "vi".equals(language) ? "Thanh toán bằng mã QR" : "Pay with QR Code" %></button>
-                        <button onclick="payWithMoMo()" class="btn bg-pink-500 hover:bg-pink-600 w-full"><%= "vi".equals(language) ? "Thanh toán qua MoMo" : "Pay with MoMo" %></button>
+                        <button onclick="payWithTest()" class="btn bg-yellow-500 hover:bg-yellow-600 w-full">
+                            <%= "vi".equals(language) ? "Thanh toán Test (Xác nhận ngay)" : "Pay Test (Confirm Immediately)" %>
+                        </button>
+                        <button onclick="payWithMoMo()" class="btn bg-pink-500 hover:bg-pink-600 w-full">
+                            <%= "vi".equals(language) ? "Thanh toán qua MoMo" : "Pay with MoMo" %>
+                        </button>
                     </div>
-                    <button onclick="closePaymentModal()" class="mt-4 text-gray-600 dark:text-gray-300 underline"><%= "vi".equals(language) ? "Đóng" : "Close" %></button>
-                </div>
-            </div>
-
-            <!-- Modal hiển thị mã QR -->
-            <div id="qrModal" class="qr-modal">
-                <div class="modal-box">
-                    <h3 class="text-xl font-semibold"><%= "vi".equals(language) ? "Thanh toán bằng mã QR" : "Pay with QR Code" %></h3>
-                    <p class="mt-4"><%= "vi".equals(language) ? "Số tiền cần thanh toán: " : "Amount to pay: " %><span id="qrTotalPrice"></span> VND</p>
-                    <img src="<%= request.getContextPath() %>/assets/images/qr.jpg" alt="QR Code" class="mx-auto my-4 w-48 h-48">
-                    <p><%= "vi".equals(language) ? "Thông tin thanh toán: " : "Payment details: " %><br>Booking ID: <span id="qrBookingId"></span><br>
-                        <%= "vi".equals(language) ? "Vui lòng quét mã QR và liên hệ Admin để xác nhận sau khi thanh toán." : "Please scan the QR code and contact Admin to confirm after payment." %>
-                    </p>
-                    <button onclick="closeQRModal()" class="mt-4 text-gray-600 dark:text-gray-300 underline"><%= "vi".equals(language) ? "Đóng" : "Close" %></button>
+                    <button onclick="closePaymentModal()" class="mt-4 text-gray-600 dark:text-gray-300 underline">
+                        <%= "vi".equals(language) ? "Đóng" : "Close" %>
+                    </button>
                 </div>
             </div>
 
@@ -435,9 +286,7 @@
             function showModal() {
                 const modal = document.getElementById('avatarModal');
                 modal.style.display = 'block';
-                modal.onclick = function () {
-                    modal.style.display = 'none';
-                }
+                modal.onclick = function () { modal.style.display = 'none'; }
             }
 
             function changeLanguage(lang) {
@@ -446,11 +295,8 @@
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                     body: 'language=' + encodeURIComponent(lang)
                 }).then(response => {
-                    if (response.ok) {
-                        location.reload();
-                    } else {
-                        console.error('Lỗi khi thay đổi ngôn ngữ: ' + response.status);
-                    }
+                    if (response.ok) { location.reload(); }
+                    else { console.error('Lỗi khi thay đổi ngôn ngữ: ' + response.status); }
                 }).catch(error => console.error('Lỗi mạng: ', error));
             }
 
@@ -465,9 +311,7 @@
                         const themeIcon = document.querySelector('#themeToggle i');
                         themeIcon.className = 'fas ' + (newTheme === 'dark' ? 'fa-sun' : 'fa-moon');
                         document.getElementById('themeToggle').setAttribute('onclick', "changeTheme('" + (newTheme === 'dark' ? 'light' : 'dark') + "')");
-                    } else {
-                        console.error('Lỗi khi thay đổi chủ đề: ' + response.status);
-                    }
+                    } else { console.error('Lỗi khi thay đổi chủ đề: ' + response.status); }
                 }).catch(error => console.error('Lỗi mạng: ', error));
             }
 
@@ -481,64 +325,28 @@
                 document.getElementById('paymentModal').style.display = 'none';
             }
 
-            function payTest() {
+            function payWithTest() {
                 let bookingId = document.getElementById('modalBookingId').value;
                 fetch('<%= request.getContextPath() %>/user/bookings', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: 'action=pay&bookingId=' + encodeURIComponent(bookingId) + '&method=test'
+                    body: 'action=payTest&bookingId=' + encodeURIComponent(bookingId)
                 }).then(() => {
-                    alert('<%= "vi".equals(language) ? "Thanh toán Test thành công! Đặt phòng đã được xác nhận." : "Test payment successful! Booking has been confirmed." %>');
+                    alert('<%= "vi".equals(language) ? "Thanh toán Test thành công! Giao dịch đã được xác nhận." : "Test payment successful! Transaction has been confirmed." %>');
                     closePaymentModal();
                     location.reload();
                 });
-            }
-
-            function payAtHotel() {
-                let bookingId = document.getElementById('modalBookingId').value;
-                fetch('<%= request.getContextPath() %>/user/bookings', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: 'action=pay&bookingId=' + encodeURIComponent(bookingId) + '&method=hotel'
-                }).then(() => {
-                    alert('<%= "vi".equals(language) ? "Bạn đã chọn thanh toán tại khách sạn. Vui lòng thanh toán khi nhận phòng và chờ Admin xác nhận." : "You have chosen to pay at the hotel. Please pay upon check-in and wait for Admin confirmation." %>');
-                    closePaymentModal();
-                    location.reload();
-                });
-            }
-
-            function payWithQR() {
-                let bookingId = document.getElementById('modalBookingId').value;
-                let totalPrice = document.getElementById('modalTotalPrice').value;
-                fetch('<%= request.getContextPath() %>/user/bookings', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: 'action=pay&bookingId=' + encodeURIComponent(bookingId) + '&method=qr'
-                }).then(() => {
-                    document.getElementById('qrBookingId').textContent = bookingId;
-                    document.getElementById('qrTotalPrice').textContent = totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                    closePaymentModal();
-                    document.getElementById('qrModal').style.display = 'flex';
-                });
-            }
-
-            function closeQRModal() {
-                document.getElementById('qrModal').style.display = 'none';
             }
 
             function payWithMoMo() {
                 let bookingId = document.getElementById('modalBookingId').value;
                 let totalPrice = document.getElementById('modalTotalPrice').value;
                 let momoLink = "https://me.momo.vn/0337090061?amount=" + totalPrice + "&note=Thanh%20toan%20booking%20ID%20" + bookingId;
-                let message = '<%= "vi".equals(language) ? "Vui lòng nhấp vào link để thanh toán qua MoMo:\\n" : "Please click the link to pay via MoMo:\\n" %>'
-                        + "Link: <a href='" + momoLink + "' target='_blank'>" + momoLink + "</a><br>"
-                        + '<%= "vi".equals(language) ? "Sau khi thanh toán, nhấn Xác nhận trên giao diện để hoàn tất." : "After payment, press Confirm on the interface to complete." %>';
-                alert(message);
-
+                window.open(momoLink, '_blank');
                 fetch('<%= request.getContextPath() %>/user/bookings', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: 'action=pay&bookingId=' + encodeURIComponent(bookingId) + '&method=momo'
+                    body: 'action=confirmMoMo&bookingId=' + encodeURIComponent(bookingId)
                 }).then(() => {
                     closePaymentModal();
                     location.reload();

@@ -49,10 +49,6 @@ public class UserBookingsController extends HttpServlet {
             List<Booking> bookings = userBookingService.getUserBookings(
                 user.getUserId(), statusFilter, checkInFrom, checkInTo, sortOption
             );
-            for (Booking booking : bookings) {
-                boolean hasPendingTransaction = userBookingService.hasPendingMoMoTransaction(booking.getBookingId());
-                booking.setHasPendingTransaction(hasPendingTransaction);
-            }
             LOGGER.log(Level.INFO, "Retrieved {0} bookings for userId={1}", new Object[]{bookings.size(), user.getUserId()});
             request.setAttribute("bookings", bookings);
 
@@ -90,32 +86,26 @@ public class UserBookingsController extends HttpServlet {
             if ("cancel".equals(action)) {
                 userRoomService.cancelBooking(bookingId, user.getUserId());
                 LOGGER.info("Booking ID=" + bookingId + " cancelled by userId=" + user.getUserId());
-            } else if ("pay".equals(action)) {
-                String method = request.getParameter("method");
-                Booking booking = userBookingService.getBookingById(bookingId, user.getUserId());
-                if (booking == null || !"Pending".equals(booking.getStatus())) {
-                    throw new SQLException("Booking not found or not in Pending status.");
-                }
-
-                if ("test".equals(method)) {
-                    userBookingService.confirmBooking(bookingId, user.getUserId());
-                    LOGGER.info("Booking ID=" + bookingId + " confirmed immediately (Test payment) by userId=" + user.getUserId());
-                } else if ("hotel".equals(method)) {
-                    LOGGER.info("Booking ID=" + bookingId + " set for payment at hotel, status remains Pending.");
-                } else if ("qr".equals(method)) {
-                    LOGGER.info("Booking ID=" + bookingId + " set for QR payment, status remains Pending.");
-                } else if ("momo".equals(method)) {
-                    int transactionId = userBookingService.createTransaction(bookingId, user.getUserId(), booking.getTotalPrice().doubleValue());
-                    LOGGER.info("Transaction ID=" + transactionId + " created for MoMo payment for booking ID=" + bookingId);
-                }
             } else if ("confirmMoMo".equals(action)) {
                 userBookingService.confirmMoMoPayment(bookingId, user.getUserId());
                 LOGGER.info("MoMo payment confirmed for booking ID=" + bookingId + " by userId=" + user.getUserId());
+            } else if ("payTest".equals(action)) {
+                userBookingService.confirmTestPayment(bookingId, user.getUserId());
+                LOGGER.info("Test payment confirmed for booking ID=" + bookingId + " by userId=" + user.getUserId());
+            } else {
+                LOGGER.log(Level.WARNING, "Unknown action: " + action);
+                request.setAttribute("error", "Hành động không hợp lệ: " + action);
+                doGet(request, response);
+                return;
             }
             response.sendRedirect(request.getContextPath() + "/user/bookings");
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error processing action '" + action + "' for booking ID=" + bookingId, e);
             request.setAttribute("error", "Unable to process action '" + action + "': " + e.getMessage());
+            doGet(request, response);
+        } catch (NumberFormatException e) {
+            LOGGER.log(Level.WARNING, "Invalid bookingId: " + request.getParameter("bookingId"), e);
+            request.setAttribute("error", "ID đặt phòng không hợp lệ.");
             doGet(request, response);
         }
     }

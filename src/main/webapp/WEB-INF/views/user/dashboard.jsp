@@ -153,6 +153,7 @@
                             <c:when test="${not empty sessionScope.user}">
                                 <a href="<%= request.getContextPath() %>/user/profile"><%= language.equals("vi") ? "Hồ sơ" : "Profile" %></a>
                                 <a href="<%= request.getContextPath() %>/user/bookings"><%= language.equals("vi") ? "Đặt phòng" : "Bookings" %></a>
+                                <a href="<%= request.getContextPath() %>/user/change-password"><%= language.equals("vi") ? "Đổi mật khẩu" : "Change Password" %></a>
                                 <a href="<%= request.getContextPath() %>/logout"><%= language.equals("vi") ? "Đăng xuất" : "Logout" %></a>
                             </c:when>
                             <c:otherwise>

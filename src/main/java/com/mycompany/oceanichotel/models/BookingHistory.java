@@ -53,10 +53,10 @@ public class BookingHistory {
     public void setOldStatus(String oldStatus) {
         if (oldStatus == null) {
             this.oldStatus = null;
-        } else if (oldStatus.equals("Pending") || oldStatus.equals("Confirmed") || oldStatus.equals("Cancelled")) {
+        } else if (oldStatus.equals("Pending") || oldStatus.equals("Confirmed") || oldStatus.equals("Cancelled") || oldStatus.equals("Success")) {
             this.oldStatus = oldStatus;
         } else {
-            throw new IllegalArgumentException("Old status must be 'Pending', 'Confirmed', or 'Cancelled'");
+            throw new IllegalArgumentException("Old status must be 'Pending', 'Confirmed', 'Cancelled', or 'Success'");
         }
     }
 
@@ -65,10 +65,10 @@ public class BookingHistory {
     }
 
     public void setNewStatus(String newStatus) {
-        if (newStatus != null && (newStatus.equals("Pending") || newStatus.equals("Confirmed") || newStatus.equals("Cancelled"))) {
+        if (newStatus != null && (newStatus.equals("Pending") || newStatus.equals("Confirmed") || newStatus.equals("Cancelled") || newStatus.equals("Success"))) {
             this.newStatus = newStatus;
         } else {
-            throw new IllegalArgumentException("New status must be 'Pending', 'Confirmed', or 'Cancelled'");
+            throw new IllegalArgumentException("New status must be 'Pending', 'Confirmed', 'Cancelled', or 'Success'");
         }
     }
 

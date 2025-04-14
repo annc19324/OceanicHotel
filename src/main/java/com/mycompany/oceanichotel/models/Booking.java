@@ -58,11 +58,13 @@ public class Booking {
     public BigDecimal getDiscountedPrice() { return discountedPrice; }
     public void setDiscountedPrice(BigDecimal discountedPrice) { this.discountedPrice = discountedPrice; }
     public String getStatus() { return status; }
+
+    
     public void setStatus(String status) {
-        if (status != null && (status.equals("Pending") || status.equals("Confirmed") || status.equals("Cancelled"))) {
+        if (status != null && (status.equals("Pending") || status.equals("Confirmed") || status.equals("Cancelled") || status.equals("Success"))) {
             this.status = status;
         } else {
-            throw new IllegalArgumentException("Status must be 'Pending', 'Confirmed', or 'Cancelled'");
+            throw new IllegalArgumentException("Status must be 'Pending', 'Confirmed', 'Cancelled', or 'Success'");
         }
     }
     public String getBookingMethod() { return bookingMethod; }

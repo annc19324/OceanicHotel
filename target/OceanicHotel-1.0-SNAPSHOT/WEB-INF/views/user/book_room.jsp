@@ -57,7 +57,7 @@
                 border-radius: 8px;
                 box-shadow: 0 2px 4px rgba(0, 51, 102, 0.2);
                 padding: 15px;
-                max-width: 400px; /* Thu nhỏ form từ 600px xuống 400px */
+                max-width: 400px;
                 margin: 0 auto;
             }
             .dark-mode .form-section {
@@ -71,20 +71,20 @@
                 color: #e6f0fa;
             }
             .form-group {
-                margin-bottom: 10px; /* Giảm khoảng cách từ 15px xuống 10px */
+                margin-bottom: 10px;
             }
             label {
                 display: block;
                 font-weight: bold;
                 margin-bottom: 3px;
-                font-size: 0.9rem; /* Thu nhỏ chữ label */
+                font-size: 0.9rem;
             }
             input[type="date"], input[type="number"] {
                 width: 100%;
-                padding: 6px; /* Giảm padding từ 8px xuống 6px */
+                padding: 6px;
                 border: 1px solid #ccc;
                 border-radius: 4px;
-                font-size: 0.9rem; /* Thu nhỏ chữ input */
+                font-size: 0.9rem;
             }
             .dark-mode input[type="date"], .dark-mode input[type="number"] {
                 background: #4a6f9c;
@@ -94,13 +94,13 @@
             .btn {
                 background: #2b6cb0;
                 color: #fff;
-                padding: 6px 12px; /* Giảm padding để nút nhỏ hơn */
+                padding: 6px 12px;
                 border: none;
                 border-radius: 4px;
                 text-decoration: none;
                 cursor: pointer;
                 transition: background 0.2s;
-                font-size: 0.9rem; /* Thu nhỏ chữ nút */
+                font-size: 0.9rem;
             }
             .btn:hover {
                 background: #1e4976;
@@ -164,6 +164,7 @@
                             <c:when test="${not empty sessionScope.user}">
                                 <a href="<%= request.getContextPath() %>/user/profile" class="text-white hover:text-blue-300 transition"><%= language.equals("vi") ? "Hồ sơ" : "Profile" %></a>
                                 <a href="<%= request.getContextPath() %>/user/bookings" class="text-white hover:text-blue-300 transition"><%= language.equals("vi") ? "Đặt phòng" : "Bookings" %></a>
+                                <a href="<%= request.getContextPath() %>/user/change-password"><%= language.equals("vi") ? "Đổi mật khẩu" : "Change Password" %></a>
                                 <a href="<%= request.getContextPath() %>/logout" class="text-white hover:text-blue-300 transition"><%= language.equals("vi") ? "Đăng xuất" : "Logout" %></a>
                             </c:when>
                             <c:otherwise>
@@ -234,7 +235,7 @@
                                 <div class="form-group">
                                     <label for="checkInDate"><%= language.equals("vi") ? "Ngày nhận phòng" : "Check-in Date" %></label>
                                     <input type="date" id="checkInDate" name="checkInDate" required>
-                                    <p id="checkInError" class="error-message"><%= language.equals("vi") ? "Ngày nhận phòng phải từ hôm nay trở đi." : "Check-in date must be today or later." %></p>
+                                    <p id="checkInError" class="error-message"><%= language.equals("vi") ? "Ngày nhận phòng phải từ 2 đến 7 ngày sau ngày hiện tại." : "Check-in date must be between 2 and 7 days from today." %></p>
                                 </div>
                                 <div class="form-group">
                                     <label for="checkOutDate"><%= language.equals("vi") ? "Ngày trả phòng" : "Check-out Date" %></label>
@@ -305,7 +306,14 @@
 
             function validateForm() {
                 let isValid = true;
-                const today = new Date().toISOString().split('T')[0];
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Đặt giờ về 00:00 để so sánh ngày chính xác
+                const minCheckIn = new Date(today);
+                minCheckIn.setDate(today.getDate() + 2); // Tối thiểu 2 ngày sau
+                const maxCheckIn = new Date(today);
+                maxCheckIn.setDate(today.getDate() + 7); // Tối đa 7 ngày sau
+                const minCheckInDate = minCheckIn.toISOString().split('T')[0];
+                const maxCheckInDate = maxCheckIn.toISOString().split('T')[0];
                 const checkInDate = document.getElementById('checkInDate').value;
                 const checkOutDate = document.getElementById('checkOutDate').value;
                 const adults = parseInt(document.getElementById('adults').value);
@@ -319,9 +327,11 @@
                 document.getElementById('adultsError').style.display = 'none';
                 document.getElementById('childrenError').style.display = 'none';
 
-                // Validate check-in date
-                if (checkInDate < today) {
+                // Validate check-in date (từ 2-7 ngày sau hôm nay)
+                if (checkInDate < minCheckInDate || checkInDate > maxCheckInDate) {
                     document.getElementById('checkInError').style.display = 'block';
+                    document.getElementById('checkInError').textContent =
+                            '<%= language.equals("vi") ? "Ngày nhận phòng phải từ 2 đến 7 ngày sau ngày hiện tại." : "Check-in date must be between 2 and 7 days from today." %>';
                     isValid = false;
                 }
 

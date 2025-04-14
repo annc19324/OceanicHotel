@@ -45,6 +45,23 @@ public class AdminUserService {
         return false;
     }
 
+    public boolean isCccdExists(String cccd, Integer excludeUserId) throws SQLException {
+        if (cccd == null || cccd.trim().isEmpty()) {
+            return false;
+        }
+        String query = "SELECT COUNT(*) FROM Users WHERE cccd = ? AND (user_id != ? OR ? IS NULL)";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, cccd);
+            stmt.setObject(2, excludeUserId, java.sql.Types.INTEGER);
+            stmt.setObject(3, excludeUserId, java.sql.Types.INTEGER);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        }
+        return false;
+    }
+
     public List<User> getUsers(int page, String search) throws SQLException {
         if (page < 1) {
             LOGGER.log(Level.WARNING, "Invalid page number: {0}, defaulting to 1", page);
@@ -137,6 +154,9 @@ public class AdminUserService {
         if (isEmailExists(user.getEmail(), null)) {
             throw new SQLException("Email already exists: " + user.getEmail());
         }
+        if (isCccdExists(user.getCccd(), null)) {
+            throw new SQLException("CCCD already exists: " + user.getCccd());
+        }
         if (user.getDateOfBirth() == null) {
             throw new SQLException("Date of birth is required!");
         }
@@ -164,28 +184,30 @@ public class AdminUserService {
         if (isEmailExists(user.getEmail(), user.getUserId())) {
             throw new SQLException("Email already exists: " + user.getEmail());
         }
+        if (isCccdExists(user.getCccd(), user.getUserId())) {
+            throw new SQLException("CCCD already exists: " + user.getCccd());
+        }
         if (user.getDateOfBirth() == null) {
             throw new SQLException("Date of birth is required!");
         }
 
-        String query = "UPDATE Users SET username = ?, email = ?, role = ?" +
-                       (user.getPassword() != null ? ", password = ?" : "") +
-                       ", full_name = ?, cccd = ?, phone_number = ?, date_of_birth = ?, gender = ?, is_active = ? WHERE user_id = ?";
-        String hashedPassword = user.getPassword() != null ? SecurityUtil.hashPassword(user.getPassword()) : null;
+        String query = "UPDATE Users SET username = ?, email = ?, role = ?, full_name = ?, cccd = ?, phone_number = ?, date_of_birth = ?, gender = ?, is_active = ?" +
+                      (user.getPassword() != null && !user.getPassword().trim().isEmpty() ? ", password = ?" : "") +
+                      " WHERE user_id = ?";
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, user.getUsername());
-            stmt.setString(2, user.getEmail());
-            stmt.setString(3, user.getRole());
-            int paramIndex = 4;
-            if (user.getPassword() != null) {
-                stmt.setString(paramIndex++, hashedPassword);
-            }
+            int paramIndex = 1;
+            stmt.setString(paramIndex++, user.getUsername());
+            stmt.setString(paramIndex++, user.getEmail());
+            stmt.setString(paramIndex++, user.getRole());
             stmt.setString(paramIndex++, user.getFullName());
             stmt.setString(paramIndex++, user.getCccd());
             stmt.setString(paramIndex++, user.getPhoneNumber());
             stmt.setDate(paramIndex++, new java.sql.Date(user.getDateOfBirth().getTime()));
             stmt.setString(paramIndex++, user.getGender());
             stmt.setBoolean(paramIndex++, user.isActive());
+            if (user.getPassword() != null && !user.getPassword().trim().isEmpty()) {
+                stmt.setString(paramIndex++, SecurityUtil.hashPassword(user.getPassword()));
+            }
             stmt.setInt(paramIndex, user.getUserId());
             stmt.executeUpdate();
         }

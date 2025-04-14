@@ -39,6 +39,7 @@ com\mycompany\oceanichotel\controllers\user\ErrorHandlerServlet.class
 com\mycompany\oceanichotel\utils\EmailUtil$1.class
 com\mycompany\oceanichotel\JakartaRestConfiguration.class
 com\mycompany\oceanichotel\models\User.class
+com\mycompany\oceanichotel\controllers\user\ChangePasswordController.class
 com\mycompany\oceanichotel\controllers\user\RegisterController.class
 com\mycompany\oceanichotel\models\RoomType.class
 com\mycompany\oceanichotel\models\RoomTypeImage.class

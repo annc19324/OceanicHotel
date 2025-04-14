@@ -106,7 +106,7 @@ public class UserRoomService {
         Room room = new Room();
         room.setRoomId(rs.getInt("room_id"));
         room.setRoomNumber(rs.getString("room_number"));
-        room.setPricePerNight(rs.getBigDecimal("price_per_night")); // Đổi từ getDouble sang getBigDecimal
+        room.setPricePerNight(rs.getBigDecimal("price_per_night"));
         room.setMaxAdults(rs.getInt("max_adults"));
         room.setMaxChildren(rs.getInt("max_children"));
         room.setDescription(rs.getString("description"));
@@ -142,10 +142,10 @@ public class UserRoomService {
             stmtBooking.setInt(2, booking.getRoomId());
             stmtBooking.setDate(3, new java.sql.Date(booking.getCheckInDate().getTime()));
             stmtBooking.setDate(4, new java.sql.Date(booking.getCheckOutDate().getTime()));
-            stmtBooking.setBigDecimal(5, booking.getTotalPrice()); // Đổi từ setDouble sang setBigDecimal
+            stmtBooking.setBigDecimal(5, booking.getTotalPrice());
             stmtBooking.setString(6, booking.getStatus());
-            stmtBooking.setInt(7, booking.getNumAdults());    // Đổi từ getAdults sang getNumAdults
-            stmtBooking.setInt(8, booking.getNumChildren());  // Đổi từ getChildren sang getNumChildren
+            stmtBooking.setInt(7, booking.getNumAdults());
+            stmtBooking.setInt(8, booking.getNumChildren());
             int rowsAffected = stmtBooking.executeUpdate();
             LOGGER.info("Inserted into Bookings, rows affected: " + rowsAffected);
 
@@ -189,22 +189,10 @@ public class UserRoomService {
             }
             throw e;
         } finally {
-            if (stmtBooking != null) try {
-                stmtBooking.close();
-            } catch (SQLException ignored) {
-            }
-            if (stmtRoom != null) try {
-                stmtRoom.close();
-            } catch (SQLException ignored) {
-            }
-            if (stmtHistory != null) try {
-                stmtHistory.close();
-            } catch (SQLException ignored) {
-            }
-            if (conn != null) try {
-                conn.close();
-            } catch (SQLException ignored) {
-            }
+            if (stmtBooking != null) try { stmtBooking.close(); } catch (SQLException ignored) {}
+            if (stmtRoom != null) try { stmtRoom.close(); } catch (SQLException ignored) {}
+            if (stmtHistory != null) try { stmtHistory.close(); } catch (SQLException ignored) {}
+            if (conn != null) try { conn.close(); } catch (SQLException ignored) {}
         }
     }
 
@@ -236,10 +224,10 @@ public class UserRoomService {
                     booking.setRoomId(rs.getInt("room_id"));
                     booking.setCheckInDate(rs.getDate("check_in_date"));
                     booking.setCheckOutDate(rs.getDate("check_out_date"));
-                    booking.setTotalPrice(rs.getBigDecimal("total_price")); // Đổi từ getDouble sang getBigDecimal
+                    booking.setTotalPrice(rs.getBigDecimal("total_price"));
                     booking.setStatus(rs.getString("status"));
-                    booking.setNumAdults(rs.getInt("num_adults"));    // Đổi từ setAdults sang setNumAdults
-                    booking.setNumChildren(rs.getInt("num_children")); // Đổi từ setChildren sang setNumChildren
+                    booking.setNumAdults(rs.getInt("num_adults"));
+                    booking.setNumChildren(rs.getInt("num_children"));
                     Room room = new Room();
                     room.setRoomNumber(rs.getString("room_number"));
                     RoomType roomType = new RoomType();
@@ -282,7 +270,7 @@ public class UserRoomService {
                     history.setChangedBy(rs.getInt("changed_by"));
                     history.setOldStatus(rs.getString("old_status"));
                     history.setNewStatus(rs.getString("new_status"));
-                    history.setChangedAt(rs.getTimestamp("changed_at")); // Sử dụng Timestamp để giữ giờ phút giây
+                    history.setChangedAt(rs.getTimestamp("changed_at"));
                     historyList.add(history);
                 }
             }
@@ -295,17 +283,13 @@ public class UserRoomService {
     }
 
     public void cancelBooking(int bookingId, int userId) throws SQLException {
-        Connection conn = null;
-        PreparedStatement stmtBooking = null;
-        PreparedStatement stmtRoom = null;
-        PreparedStatement stmtHistory = null;
-
-        try {
-            conn = DatabaseUtil.getConnection();
+        try (Connection conn = DatabaseUtil.getConnection()) {
             conn.setAutoCommit(false);
-            LOGGER.info("Starting transaction to cancel bookingId=" + bookingId);
 
             String checkQuery = "SELECT status, check_in_date, room_id FROM Bookings WHERE booking_id = ? AND user_id = ?";
+            String status;
+            Date checkInDate;
+            int roomId;
             try (PreparedStatement checkStmt = conn.prepareStatement(checkQuery)) {
                 checkStmt.setInt(1, bookingId);
                 checkStmt.setInt(2, userId);
@@ -313,76 +297,45 @@ public class UserRoomService {
                 if (!rs.next()) {
                     throw new SQLException("Booking not found or not owned by userId=" + userId);
                 }
-                String status = rs.getString("status");
-                java.sql.Date checkInDate = rs.getDate("check_in_date");
-                int roomId = rs.getInt("room_id");
+                status = rs.getString("status");
+                checkInDate = rs.getDate("check_in_date");
+                roomId = rs.getInt("room_id");
 
                 long hoursUntilCheckIn = TimeUnit.HOURS.convert(checkInDate.getTime() - new Date().getTime(), TimeUnit.MILLISECONDS);
                 if (!"Pending".equals(status) || hoursUntilCheckIn <= 24) {
                     throw new SQLException("Booking cannot be cancelled: status=" + status + ", hours until check-in=" + hoursUntilCheckIn);
                 }
+            }
 
-                String updateBookingQuery = "UPDATE Bookings SET status = 'Cancelled' WHERE booking_id = ?";
-                stmtBooking = conn.prepareStatement(updateBookingQuery);
-                stmtBooking.setInt(1, bookingId);
-                int rowsAffected = stmtBooking.executeUpdate();
-                LOGGER.info("Updated Booking status to Cancelled, rows affected: " + rowsAffected);
-                if (rowsAffected != 1) {
-                    throw new SQLException("Failed to update booking status for bookingId=" + bookingId);
-                }
+            String updateBookingQuery = "UPDATE Bookings SET status = 'Cancelled' WHERE booking_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(updateBookingQuery)) {
+                stmt.setInt(1, bookingId);
+                stmt.executeUpdate();
+            }
 
-                String updateRoomQuery = "UPDATE Rooms SET is_available = 1 WHERE room_id = ?";
-                stmtRoom = conn.prepareStatement(updateRoomQuery);
-                stmtRoom.setInt(1, roomId);
-                rowsAffected = stmtRoom.executeUpdate();
-                LOGGER.info("Updated Room availability, rows affected: " + rowsAffected);
-                if (rowsAffected != 1) {
-                    throw new SQLException("Failed to update room availability for roomId=" + roomId);
-                }
+            String updateRoomQuery = "UPDATE Rooms SET is_available = 1 WHERE room_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(updateRoomQuery)) {
+                stmt.setInt(1, roomId);
+                stmt.executeUpdate();
+            }
 
-                String insertHistoryQuery = "INSERT INTO Booking_History (booking_id, changed_by, old_status, new_status) VALUES (?, ?, ?, ?)";
-                stmtHistory = conn.prepareStatement(insertHistoryQuery);
-                stmtHistory.setInt(1, bookingId);
-                stmtHistory.setInt(2, userId);
-                stmtHistory.setString(3, "Pending");
-                stmtHistory.setString(4, "Cancelled");
-                rowsAffected = stmtHistory.executeUpdate();
-                LOGGER.info("Inserted into Booking_History, rows affected: " + rowsAffected);
-                if (rowsAffected != 1) {
-                    throw new SQLException("Failed to insert into Booking_History for bookingId=" + bookingId);
-                }
+            String updateTransactionQuery = "UPDATE Transactions SET status = 'Failed' WHERE booking_id = ? AND status = 'Pending'";
+            try (PreparedStatement stmt = conn.prepareStatement(updateTransactionQuery)) {
+                stmt.setInt(1, bookingId);
+                stmt.executeUpdate();
+            }
+
+            String insertHistoryQuery = "INSERT INTO Booking_History (booking_id, changed_by, old_status, new_status) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement stmt = conn.prepareStatement(insertHistoryQuery)) {
+                stmt.setInt(1, bookingId);
+                stmt.setInt(2, userId);
+                stmt.setString(3, "Pending");
+                stmt.setString(4, "Cancelled");
+                stmt.executeUpdate();
             }
 
             conn.commit();
-            LOGGER.info("Transaction committed successfully for cancelling bookingId=" + bookingId);
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error cancelling bookingId=" + bookingId, e);
-            if (conn != null) {
-                try {
-                    LOGGER.info("Rolling back transaction for bookingId=" + bookingId);
-                    conn.rollback();
-                } catch (SQLException rollbackEx) {
-                    LOGGER.log(Level.SEVERE, "Rollback failed", rollbackEx);
-                }
-            }
-            throw e;
-        } finally {
-            if (stmtBooking != null) try {
-                stmtBooking.close();
-            } catch (SQLException ignored) {
-            }
-            if (stmtRoom != null) try {
-                stmtRoom.close();
-            } catch (SQLException ignored) {
-            }
-            if (stmtHistory != null) try {
-                stmtHistory.close();
-            } catch (SQLException ignored) {
-            }
-            if (conn != null) try {
-                conn.close();
-            } catch (SQLException ignored) {
-            }
+            LOGGER.info("Booking ID=" + bookingId + " cancelled manually by userId=" + userId);
         }
     }
 }
