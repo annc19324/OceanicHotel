@@ -176,20 +176,35 @@ public class UserBookingService {
     }
 
     public Booking getBookingById(int bookingId, int userId) throws SQLException {
-        String query = "SELECT b.booking_id, b.total_price, b.status "
-                + "FROM Bookings b WHERE b.booking_id = ? AND b.user_id = ?";
+        String query = "SELECT b.booking_id, b.user_id, b.total_price, b.status "
+                + "FROM Bookings b WHERE b.booking_id = ?" + (userId != -1 ? " AND b.user_id = ?" : "");
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, bookingId);
-            stmt.setInt(2, userId);
+            if (userId != -1) {
+                stmt.setInt(2, userId);
+            }
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 Booking booking = new Booking();
                 booking.setBookingId(rs.getInt("booking_id"));
+                booking.setUserId(rs.getInt("user_id"));
                 booking.setTotalPrice(rs.getBigDecimal("total_price"));
                 booking.setStatus(rs.getString("status"));
                 return booking;
             }
             return null;
+        }
+    }
+
+    public int getUserIdByBookingId(int bookingId) throws SQLException {
+        String query = "SELECT user_id FROM Bookings WHERE booking_id = ?";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, bookingId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("user_id");
+            }
+            return -1;
         }
     }
 
@@ -359,6 +374,79 @@ public class UserBookingService {
 
             conn.commit();
             LOGGER.info("Booking saved and transaction created with status 'Pending' for roomId=" + booking.getRoomId());
+        }
+    }
+
+    public void confirmPayOSPayment(int bookingId, int userId) throws SQLException {
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            conn.setAutoCommit(false);
+
+            String updateBookingQuery = "UPDATE Bookings SET status = 'Confirmed' WHERE booking_id = ? AND user_id = ? AND status = 'Pending'";
+            try (PreparedStatement stmt = conn.prepareStatement(updateBookingQuery)) {
+                stmt.setInt(1, bookingId);
+                stmt.setInt(2, userId);
+                int rowsAffected = stmt.executeUpdate();
+                if (rowsAffected == 0) {
+                    throw new SQLException("Booking not found or not in Pending status.");
+                }
+            }
+
+            String updateTransactionQuery = "UPDATE Transactions SET status = 'Success' WHERE booking_id = ? AND status = 'Pending'";
+            try (PreparedStatement stmt = conn.prepareStatement(updateTransactionQuery)) {
+                stmt.setInt(1, bookingId);
+                int rowsAffected = stmt.executeUpdate();
+                if (rowsAffected == 0) {
+                    throw new SQLException("No pending PayOS transaction found.");
+                }
+            }
+
+            String insertHistoryQuery = "INSERT INTO Booking_History (booking_id, changed_by, old_status, new_status, changed_at) VALUES (?, ?, 'Pending', 'Confirmed', GETDATE())";
+            try (PreparedStatement stmt = conn.prepareStatement(insertHistoryQuery)) {
+                stmt.setInt(1, bookingId);
+                stmt.setInt(2, userId);
+                stmt.executeUpdate();
+            }
+
+            conn.commit();
+            LOGGER.info("PayOS payment confirmed for booking ID=" + bookingId + ", user ID=" + userId);
+        }
+    }
+
+    public void cancelBooking(int bookingId, int userId) throws SQLException {
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            conn.setAutoCommit(false);
+
+            String updateBookingQuery = "UPDATE Bookings SET status = 'Cancelled' WHERE booking_id = ? AND user_id = ? AND status = 'Pending'";
+            try (PreparedStatement stmt = conn.prepareStatement(updateBookingQuery)) {
+                stmt.setInt(1, bookingId);
+                stmt.setInt(2, userId);
+                int rowsAffected = stmt.executeUpdate();
+                if (rowsAffected == 0) {
+                    throw new SQLException("Booking not found or not in Pending status.");
+                }
+            }
+
+            String updateRoomQuery = "UPDATE Rooms SET is_available = 1 WHERE room_id = (SELECT room_id FROM Bookings WHERE booking_id = ?)";
+            try (PreparedStatement stmt = conn.prepareStatement(updateRoomQuery)) {
+                stmt.setInt(1, bookingId);
+                stmt.executeUpdate();
+            }
+
+            String updateTransactionQuery = "UPDATE Transactions SET status = 'Failed' WHERE booking_id = ? AND status = 'Pending'";
+            try (PreparedStatement stmt = conn.prepareStatement(updateTransactionQuery)) {
+                stmt.setInt(1, bookingId);
+                stmt.executeUpdate();
+            }
+
+            String insertHistoryQuery = "INSERT INTO Booking_History (booking_id, changed_by, old_status, new_status, changed_at) VALUES (?, ?, 'Pending', 'Cancelled', GETDATE())";
+            try (PreparedStatement stmt = conn.prepareStatement(insertHistoryQuery)) {
+                stmt.setInt(1, bookingId);
+                stmt.setInt(2, userId);
+                stmt.executeUpdate();
+            }
+
+            conn.commit();
+            LOGGER.info("Booking ID=" + bookingId + " cancelled by userId=" + userId);
         }
     }
 }

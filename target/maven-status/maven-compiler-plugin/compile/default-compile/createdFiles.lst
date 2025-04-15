@@ -17,6 +17,7 @@ com\mycompany\oceanichotel\utils\DatabaseUtil.class
 com\mycompany\oceanichotel\services\admin\AdminSettingsService.class
 com\mycompany\oceanichotel\services\user\UserService.class
 com\mycompany\oceanichotel\controllers\admin\AdminUserController.class
+com\mycompany\oceanichotel\controllers\user\PayOSWebhookController.class
 com\mycompany\oceanichotel\models\Room.class
 com\mycompany\oceanichotel\controllers\user\LoginController.class
 com\mycompany\oceanichotel\models\RoomImage.class
