@@ -37,28 +37,44 @@ public class UserBookingsController extends HttpServlet {
     private UserRoomService userRoomService;
     private static final Logger LOGGER = Logger.getLogger(UserBookingsController.class.getName());
 
-    // PayOS credentials được đọc từ config.properties
+    // PayOS credentials được đọc từ biến môi trường, fallback sang config.properties
     private static final String PAYOS_CLIENT_ID;
     private static final String PAYOS_API_KEY;
     private static final String PAYOS_CHECKSUM_KEY;
     private final PayOS payOS;
 
     static {
-        Properties props = new Properties();
-        try (InputStream input = UserBookingsController.class.getClassLoader().getResourceAsStream("config.properties")) {
-            if (input == null) {
-                throw new RuntimeException("Không tìm thấy file config.properties");
+        String clientId = System.getenv("PAYOS_CLIENT_ID");
+        String apiKey = System.getenv("PAYOS_API_KEY");
+        String checksumKey = System.getenv("PAYOS_CHECKSUM_KEY");
+
+        boolean useEnvironment = clientId != null && apiKey != null && checksumKey != null;
+
+        if (!useEnvironment) {
+            LOGGER.info("Nguồn chính (biến môi trường) không đầy đủ, thử đọc từ nguồn dự phòng (config.properties)");
+            Properties props = new Properties();
+            try (InputStream input = UserBookingsController.class.getClassLoader().getResourceAsStream("config.properties")) {
+                if (input == null) {
+                    throw new RuntimeException("Không tìm thấy file config.properties và biến môi trường PayOS không được cấu hình");
+                }
+                props.load(input);
+                clientId = clientId != null ? clientId : props.getProperty("payos.clientId");
+                apiKey = apiKey != null ? apiKey : props.getProperty("payos.apiKey");
+                checksumKey = checksumKey != null ? checksumKey : props.getProperty("payos.checksumKey");
+                if (clientId == null || apiKey == null || checksumKey == null) {
+                    throw new RuntimeException("Thiếu thông tin PayOS trong config.properties và biến môi trường");
+                }
+                LOGGER.info("Đã lấy PayOS credentials từ nguồn dự phòng (config.properties)");
+            } catch (Exception e) {
+                throw new RuntimeException("Lỗi khi đọc config.properties: " + e.getMessage(), e);
             }
-            props.load(input);
-            PAYOS_CLIENT_ID = props.getProperty("payos.clientId");
-            PAYOS_API_KEY = props.getProperty("payos.apiKey");
-            PAYOS_CHECKSUM_KEY = props.getProperty("payos.checksumKey");
-            if (PAYOS_CLIENT_ID == null || PAYOS_API_KEY == null || PAYOS_CHECKSUM_KEY == null) {
-                throw new RuntimeException("Thiếu thông tin PayOS trong config.properties");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Lỗi khi đọc config.properties: " + e.getMessage(), e);
+        } else {
+            LOGGER.info("Đã lấy PayOS credentials từ nguồn chính (biến môi trường)");
         }
+
+        PAYOS_CLIENT_ID = clientId;
+        PAYOS_API_KEY = apiKey;
+        PAYOS_CHECKSUM_KEY = checksumKey;
     }
 
     public UserBookingsController() {
