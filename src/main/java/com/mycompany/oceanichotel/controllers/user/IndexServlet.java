@@ -1,5 +1,11 @@
 package com.mycompany.oceanichotel.controllers.user;
-
+/*
+ * Copyright (c) 2025 annc19324
+ * All rights reserved.
+ *
+ * This code is the property of annc19324.
+ * Unauthorized copying or distribution is prohibited.
+ */
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;

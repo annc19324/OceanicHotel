@@ -1,3 +1,11 @@
+<%--
+    Copyright (c) 2025 annc19324
+    All rights reserved.
+
+    This code is the property of annc19324.
+    Unauthorized copying or distribution is prohibited.
+--%>
+
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
     String language = (String) session.getAttribute("language");

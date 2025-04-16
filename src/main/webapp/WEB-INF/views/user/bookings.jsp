@@ -1,3 +1,10 @@
+<%--
+    Copyright (c) 2025 annc19324
+    All rights reserved.
+
+    This code is the property of annc19324.
+    Unauthorized copying or distribution is prohibited.
+--%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ page import="com.mycompany.oceanichotel.models.User" %>
@@ -330,10 +337,10 @@
                                                         }
                                                     %>
                                                 </p>
-                                                <form action="<%= request.getContextPath() %>/user/bookings" method="post" onsubmit="return confirm('<%= "vi".equals(language) ? "Bạn có chắc muốn hủy đặt phòng này không?" : "Are you sure you want to cancel this booking?" %>');" style="display:inline;">
+                                                <form id="cancelForm-${booking.bookingId}" action="<%= request.getContextPath() %>/user/bookings" method="post" style="display:inline;">
                                                     <input type="hidden" name="action" value="cancel">
                                                     <input type="hidden" name="bookingId" value="${booking.bookingId}">
-                                                    <button type="submit" class="btn bg-red-500 hover:bg-red-600"><%= "vi".equals(language) ? "Hủy" : "Cancel" %></button>
+                                                    <button type="button" onclick="cancelBooking(${booking.bookingId})" class="btn bg-red-500 hover:bg-red-600"><%= "vi".equals(language) ? "Hủy" : "Cancel" %></button>
                                                 </form>
                                                 <button onclick="showPaymentOptions('${booking.bookingId}', '${booking.totalPrice}')" class="btn bg-green-500 hover:bg-green-600">
                                                     <%= "vi".equals(language) ? "Thanh toán" : "Pay Now" %>
@@ -402,24 +409,14 @@
                     <%= "vi".equals(language) ? "Thanh toán qua MoMo" : "Pay with MoMo" %>
                 </button>
                 <button onclick="payWithPayOS()" class="btn bg-blue-500 hover:bg-blue-600 w-full">
-                    <%= "vi".equals(language) ? "Thanh toán qua PayOS" : "Pay with PayOS" %>
+                    <%= "vi".equals(language) ? "Thanh toán qua mã QR" : "Pay with QR Code" %>
                 </button>
             </div>
             <button onclick="closePaymentModal()" class="mt-4 text-gray-600 dark:text-gray-300 underline">
                 <%= "vi".equals(language) ? "Đóng" : "Close" %>
             </button>
         </div>
-    </div>
 
-    <!-- Footer -->
-    <footer>
-        <p>© 2025 Oceanic Hotel. <%= "vi".equals(language) ? "Mọi quyền được bảo lưu." : "All rights reserved." %></p>
-        <div class="mt-2">
-            <a href="#" class="text-gray-400 hover:text-white mx-2"><i class="fab fa-facebook-f"></i></a>
-            <a href="#" class="text-gray-400 hover:text-white mx-2"><i class="fab fa-instagram"></i></a>
-            <a href="#" class="text-gray-400 hover:text-white mx-2"><i class="fab fa-twitter"></i></a>
-        </div>
-    </footer>
 </div>
 
 <script>
@@ -531,23 +528,52 @@
             if (data.paymentLink) {
                 window.location.href = data.paymentLink;
             } else {
-                throw new Error(data.error || '<%= "vi".equals(language) ? "Lỗi khi tạo link thanh toán PayOS!" : "Error creating PayOS payment link!" %>');
+                throw new Error(data.error || '<%= "vi".equals(language) ? "Lỗi khi tạo link thanh toán QR!" : "Error creating QR payment link!" %>');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('<%= "vi".equals(language) ? "Lỗi khi kết nối với PayOS: " : "Error connecting to PayOS: " %>' + error.message);
+            alert('<%= "vi".equals(language) ? "Lỗi khi kết nối: " : "Error connection: " %>' + error.message);
             closePaymentModal();
+        });
+    }
+
+    function cancelBooking(bookingId) {
+        if (!confirm('<%= "vi".equals(language) ? "Bạn có chắc muốn hủy đặt phòng này không?" : "Are you sure you want to cancel this booking?" %>')) {
+            return;
+        }
+        fetch('<%= request.getContextPath() %>/user/bookings', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'action=cancel&bookingId=' + encodeURIComponent(bookingId)
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Cancel booking failed');
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert('<%= "vi".equals(language) ? "Đã hủy đặt phòng thành công!" : "Booking cancelled successfully!" %>');
+                location.reload();
+            } else {
+                throw new Error(data.error || '<%= "vi".equals(language) ? "Lỗi khi hủy đặt phòng!" : "Error cancelling booking!" %>');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('<%= "vi".equals(language) ? "Lỗi khi hủy đặt phòng: " : "Error cancelling booking: " %>' + error.message);
         });
     }
 
     // Kiểm tra trạng thái thanh toán từ URL
     window.onload = function() {
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('status') === 'success') {
-            alert('<%= "vi".equals(language) ? "Thanh toán PayOS thành công! Giao dịch đã được xác nhận." : "PayOS payment successful! Transaction has been confirmed." %>');
-        } else if (urlParams.get('status') === 'cancel') {
-            alert('<%= "vi".equals(language) ? "Thanh toán PayOS bị hủy!" : "PayOS payment cancelled!" %>');
+        if (urlParams.get('status') === 'PAID') {
+            alert('<%= "vi".equals(language) ? "Thanh toán thành công! Giao dịch đã được xác nhận." : "payment successful! Transaction has been confirmed." %>');
+            location.href = '<%= request.getContextPath() %>/user/bookings';
+        } else if (urlParams.get('status') === 'CANCELLED') {
+            alert('<%= "vi".equals(language) ? "Thanh toán bị hủy!" : "payment cancelled!" %>');
+            location.href = '<%= request.getContextPath() %>/user/bookings';
         }
     };
 </script>

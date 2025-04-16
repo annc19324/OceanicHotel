@@ -1,5 +1,11 @@
 package com.mycompany.oceanichotel.utils;
-
+/*
+ * Copyright (c) 2025 annc19324
+ * All rights reserved.
+ *
+ * This code is the property of annc19324.
+ * Unauthorized copying or distribution is prohibited.
+ */
 import jakarta.mail.*;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;

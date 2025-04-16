@@ -1,5 +1,11 @@
 package com.mycompany.oceanichotel.services.admin;
-
+/*
+ * Copyright (c) 2025 annc19324
+ * All rights reserved.
+ *
+ * This code is the property of annc19324.
+ * Unauthorized copying or distribution is prohibited.
+ */
 import com.mycompany.oceanichotel.utils.DatabaseUtil;
 import java.math.BigDecimal;
 import java.sql.Connection;

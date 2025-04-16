@@ -1,0 +1,5 @@
+target/ 
+.env 
+*.properties 
+src/main/resources/config.properties
+/WEB-INF/config.properties

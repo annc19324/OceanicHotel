@@ -262,3 +262,14 @@ ALTER TABLE Booking_History
 ADD CONSTRAINT CK_Booking_History_New_Status CHECK (new_status IN ('Pending', 'Confirmed', 'Cancelled', 'Success'));
 
 EXEC sp_help 'Booking_History';
+
+CREATE TABLE PayOS_Order_Mapping (
+    order_code BIGINT NOT NULL,
+    booking_id INT NOT NULL,
+    created_at DATETIME DEFAULT GETDATE(),
+    PRIMARY KEY (order_code),
+    FOREIGN KEY (booking_id) REFERENCES Bookings(booking_id)
+);
+
+ALTER TABLE Transactions DROP CONSTRAINT CK__Transacti__payme__0C85DE4D;
+ALTER TABLE Transactions ADD CONSTRAINT CK__Transacti__payme__0C85DE4D CHECK (payment_method IN ('Online', 'MoMo', 'PayOS', 'Test'));

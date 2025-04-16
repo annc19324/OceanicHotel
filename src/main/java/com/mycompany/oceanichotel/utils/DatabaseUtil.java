@@ -3,7 +3,13 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.mycompany.oceanichotel.utils;
-
+/*
+ * Copyright (c) 2025 annc19324
+ * All rights reserved.
+ *
+ * This code is the property of annc19324.
+ * Unauthorized copying or distribution is prohibited.
+ */
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;

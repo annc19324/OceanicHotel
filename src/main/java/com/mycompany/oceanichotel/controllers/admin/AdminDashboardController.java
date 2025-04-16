@@ -3,7 +3,13 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.mycompany.oceanichotel.controllers.admin;
-
+/*
+ * Copyright (c) 2025 annc19324
+ * All rights reserved.
+ *
+ * This code is the property of annc19324.
+ * Unauthorized copying or distribution is prohibited.
+ */
 import com.mycompany.oceanichotel.models.User;
 import com.mycompany.oceanichotel.utils.DatabaseUtil;
 import jakarta.servlet.ServletException;

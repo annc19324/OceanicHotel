@@ -1,5 +1,11 @@
 package com.mycompany.oceanichotel.controllers.user;
-
+/*
+ * Copyright (c) 2025 annc19324
+ * All rights reserved.
+ *
+ * This code is the property of annc19324.
+ * Unauthorized copying or distribution is prohibited.
+ */
 import com.mycompany.oceanichotel.models.Booking;
 import com.mycompany.oceanichotel.models.BookingHistory;
 import com.mycompany.oceanichotel.models.User;
@@ -17,9 +23,11 @@ import vn.payos.type.ItemData;
 import vn.payos.type.PaymentData;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
@@ -28,12 +36,30 @@ public class UserBookingsController extends HttpServlet {
     private UserBookingService userBookingService;
     private UserRoomService userRoomService;
     private static final Logger LOGGER = Logger.getLogger(UserBookingsController.class.getName());
-    
-    // PayOS credentials (thay bằng giá trị thực từ PayOS dashboard)
-    private static final String PAYOS_CLIENT_ID = "5bc05e78-94d5-4242-a8da-81648df52502"; // Thay bằng CLIENT_ID thực
-    private static final String PAYOS_API_KEY = "048b3cfd-cccc-4764-9e3d-589286c49134"; // Thay bằng API_KEY thực
-    private static final String PAYOS_CHECKSUM_KEY = "2e20e21d453b033625b85fe0785d4cad78bdeca72942547a8090f47ce23f9f55"; // Thay bằng CHECKSUM_KEY thực
+
+    // PayOS credentials được đọc từ config.properties
+    private static final String PAYOS_CLIENT_ID;
+    private static final String PAYOS_API_KEY;
+    private static final String PAYOS_CHECKSUM_KEY;
     private final PayOS payOS;
+
+    static {
+        Properties props = new Properties();
+        try (InputStream input = UserBookingsController.class.getClassLoader().getResourceAsStream("config.properties")) {
+            if (input == null) {
+                throw new RuntimeException("Không tìm thấy file config.properties");
+            }
+            props.load(input);
+            PAYOS_CLIENT_ID = props.getProperty("payos.clientId");
+            PAYOS_API_KEY = props.getProperty("payos.apiKey");
+            PAYOS_CHECKSUM_KEY = props.getProperty("payos.checksumKey");
+            if (PAYOS_CLIENT_ID == null || PAYOS_API_KEY == null || PAYOS_CHECKSUM_KEY == null) {
+                throw new RuntimeException("Thiếu thông tin PayOS trong config.properties");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khi đọc config.properties: " + e.getMessage(), e);
+        }
+    }
 
     public UserBookingsController() {
         this.payOS = new PayOS(PAYOS_CLIENT_ID, PAYOS_API_KEY, PAYOS_CHECKSUM_KEY);
@@ -65,19 +91,19 @@ public class UserBookingsController extends HttpServlet {
                     String bookingIdStr = orderCode.replaceFirst("^[0-9]{13}", "");
                     int bookingId = Integer.parseInt(bookingIdStr);
                     userBookingService.confirmPayOSPayment(bookingId, user.getUserId());
-                    request.setAttribute("success", "vi".equals(user.getLanguage()) ? 
-                        "Thanh toán PayOS thành công! Giao dịch đã được xác nhận." : 
-                        "PayOS payment successful! Transaction has been confirmed.");
+                    request.setAttribute("success", "vi".equals(user.getLanguage()) ?
+                        "Thanh toán thành công! Giao dịch đã được xác nhận." :
+                        "Payment successful! Transaction has been confirmed.");
                 } catch (NumberFormatException | SQLException e) {
-                    LOGGER.log(Level.WARNING, "Error confirming PayOS payment for orderCode=" + orderCode, e);
-                    request.setAttribute("error", "vi".equals(user.getLanguage()) ? 
-                        "Lỗi khi xác nhận thanh toán PayOS: " + e.getMessage() : 
-                        "Error confirming PayOS payment: " + e.getMessage());
+                    LOGGER.log(Level.WARNING, "Error confirming payment for orderCode=" + orderCode, e);
+                    request.setAttribute("error", "vi".equals(user.getLanguage()) ?
+                        "Lỗi khi xác nhận thanh toán: " + e.getMessage() :
+                        "Error confirming payment: " + e.getMessage());
                 }
             } else if ("CANCELLED".equals(status)) {
-                request.setAttribute("error", "vi".equals(user.getLanguage()) ? 
-                    "Thanh toán PayOS bị hủy!" : 
-                    "PayOS payment cancelled!");
+                request.setAttribute("error", "vi".equals(user.getLanguage()) ?
+                    "Thanh toán bị hủy!" :
+                    "Payment cancelled!");
             }
 
             String statusFilter = request.getParameter("statusFilter");
@@ -168,8 +194,8 @@ public class UserBookingsController extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(jsonResponse.toString());
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error creating PayOS link for booking ID=" + bookingId, e);
-            jsonResponse.put("error", "Failed to create PayOS link: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Error creating link for booking ID=" + bookingId, e);
+            jsonResponse.put("error", "Failed to create link: " + e.getMessage());
             response.setStatus(HttpServletResponse.SC_BAD_GATEWAY);
             response.getWriter().write(jsonResponse.toString());
         }
@@ -215,16 +241,16 @@ public class UserBookingsController extends HttpServlet {
                 .cancelUrl(cancelUrl)
                 .build();
 
-        LOGGER.info("Creating PayOS payment link with payload: orderCode=" + orderCode + ", bookingId=" + bookingId);
+        LOGGER.info("Creating payment link with payload: orderCode=" + orderCode + ", bookingId=" + bookingId);
 
         try {
             CheckoutResponseData responseData = payOS.createPaymentLink(paymentData);
             String checkoutUrl = responseData.getCheckoutUrl();
-            LOGGER.info("PayOS checkout URL: " + checkoutUrl);
+            LOGGER.info("Checkout URL: " + checkoutUrl);
             return checkoutUrl;
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error creating PayOS payment link: " + e.getMessage(), e);
-            throw new Exception("Failed to create PayOS payment link: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Error creating payment link: " + e.getMessage(), e);
+            throw new Exception("Failed to create payment link: " + e.getMessage());
         }
     }
 
