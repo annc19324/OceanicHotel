@@ -192,7 +192,8 @@
                 <div class="flex items-center space-x-6">
                     <nav class="flex items-center space-x-6">
                         <a href="<%= request.getContextPath() %>/user/profile"><%= language.equals("vi") ? "Hồ sơ" : "Profile" %></a>
-                        <a href="<%= request.getContextPath() %>/user/bookings"><%= language.equals("vi") ? "Đặt phòng" : "Bookings" %></a>
+                        <a href="<%= request.getContextPath() %>/user/bookings" class="text-white hover:text-blue-300 transition"><%= "vi".equals(language) ? "Chi Tiết Đặt phòng" : "Detail Bookings" %></a>
+
                         <a href="<%= request.getContextPath() %>/user/change-password"><%= language.equals("vi") ? "Đổi mật khẩu" : "Change Password" %></a>
                         <a href="<%= request.getContextPath() %>/logout"><%= language.equals("vi") ? "Đăng xuất" : "Logout" %></a>
                         <span id="languageToggle" onclick="changeLanguage('<%= language.equals("vi") ? "en" : "vi" %>')">

@@ -186,7 +186,8 @@
                         <c:choose>
                             <c:when test="${not empty sessionScope.user}">
                                 <a href="<%= request.getContextPath()%>/user/profile" class="text-white hover:text-blue-300 transition"><%= language.equals("vi") ? "Hồ sơ" : "Profile"%></a>
-                                <a href="<%= request.getContextPath()%>/user/bookings" class="text-white hover:text-blue-300 transition"><%= language.equals("vi") ? "Đặt phòng" : "Bookings"%></a>
+                                <a href="<%= request.getContextPath() %>/user/bookings" class="text-white hover:text-blue-300 transition"><%= "vi".equals(language) ? "Chi Tiết Đặt phòng" : "Detail Bookings" %></a>
+
                                 <a href="<%= request.getContextPath()%>/user/change-password"><%= language.equals("vi") ? "Đổi mật khẩu" : "Change Password"%></a>
                                 <a href="<%= request.getContextPath()%>/logout" class="text-white hover:text-blue-300 transition"><%= language.equals("vi") ? "Đăng xuất" : "Logout"%></a>
                             </c:when>
